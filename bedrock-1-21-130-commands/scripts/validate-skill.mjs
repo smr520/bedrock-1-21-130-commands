@@ -67,6 +67,20 @@ function safeRuntimeFiles() {
   return [...fixed, ...examples];
 }
 
+function markdownFiles() {
+  const files = ['SKILL.md'];
+  for (const directory of ['references', 'examples']) {
+    const absoluteDirectory = path.join(root, directory);
+    const entries = fs
+      .readdirSync(absoluteDirectory, { withFileTypes: true })
+      .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
+      .map(entry => entry.name)
+      .sort();
+    for (const entry of entries) files.push(`${directory}/${entry}`);
+  }
+  return files;
+}
+
 function countNotationBlocks(relativePath) {
   const lines = read(relativePath).split(/\r?\n/);
   let inFence = false;
@@ -231,6 +245,44 @@ function validateMarkdownLinks(relativePath) {
   }
 }
 
+function validateReferenceRouting() {
+  const skill = read('SKILL.md');
+  const referenceFiles = fs
+    .readdirSync(path.join(root, 'references'), { withFileTypes: true })
+    .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
+    .map(entry => entry.name);
+
+  for (const file of referenceFiles) {
+    const target = `references/${file}`;
+    if (!skill.includes(target)) {
+      fail('SKILL.md', 0, `参考文件未从入口路由: ${target}`);
+    }
+  }
+}
+
+function validateWikiSourceGuide() {
+  const relativePath = 'references/wiki-and-sources.md';
+  const text = read(relativePath);
+  const required = [
+    'https://learn.microsoft.com/en-us/minecraft/creator/documents/moreinfosources?view=minecraft-bedrock-stable',
+    'https://wiki.bedrock.dev/llms.txt',
+    'https://minecraft.wiki/w/Commands',
+    'CC BY-NC-SA 3.0'
+  ];
+
+  for (const value of required) {
+    if (!text.includes(value)) fail(relativePath, 0, `缺少关键来源或许可说明: ${value}`);
+  }
+  if (!/最近核对日期：\d{4}-\d{2}-\d{2}/.test(text)) {
+    fail(relativePath, 0, '缺少最近核对日期');
+  }
+  for (const match of text.matchAll(/https?:\/\/[^\s)<>]+/g)) {
+    if (!match[0].startsWith('https://')) {
+      fail(relativePath, 0, `外部来源必须使用 HTTPS: ${match[0]}`);
+    }
+  }
+}
+
 function validateExampleStructure(relativePath) {
   if (!relativePath.startsWith('examples/') || relativePath.endsWith('README.md')) return;
 
@@ -281,7 +333,9 @@ validateFrontmatter();
 for (const file of safeRuntimeFiles()) runCommandValidator(file);
 runChainValidator();
 validateRegistry();
-for (const file of safeRuntimeFiles()) {
+validateReferenceRouting();
+validateWikiSourceGuide();
+for (const file of markdownFiles()) {
   validateMarkdownLinks(file);
   validateExampleStructure(file);
 }
@@ -289,6 +343,7 @@ for (const file of safeRuntimeFiles()) {
 if (!quiet) {
   console.log(`Skill: ${root}`);
   console.log(`运行时文档已校验: ${safeRuntimeFiles().length}`);
+  console.log(`Markdown 内部链接已校验: ${markdownFiles().length}`);
   console.log('说明: legacy-to-modern.md 故意包含错误旧语法，不按可直接运行文件整体校验。');
 }
 

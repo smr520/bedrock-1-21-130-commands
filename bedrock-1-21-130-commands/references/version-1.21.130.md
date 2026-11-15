@@ -138,6 +138,7 @@ netherite_horse_armor
 ## 参考
 
 - [Minecraft 1.21.130 Bedrock Changelog](https://www.minecraft.net/en-us/article/minecraft-1-21-130-bedrock-changelog)，2025-12-09 发布。
+- [More Sources of Information about Minecraft: Bedrock Edition](https://learn.microsoft.com/en-us/minecraft/creator/documents/moreinfosources?view=minecraft-bedrock-stable)，官方说明 Stable 与 Preview 的边界，并列出社区参考入口。
 - [Getting Started with Command Blocks](https://learn.microsoft.com/en-us/minecraft/creator/documents/commandblocks?view=minecraft-bedrock-stable)。
 - [execute Command](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/commandsreference/examples/commands/execute?view=minecraft-bedrock-stable)。
 - [Minecraft Beta & Preview 1.19.60.25：MCPE-156279](https://feedback.minecraft.net/hc/en-us/articles/11995250732557-Minecraft-Beta-Preview-1-19-60-25)，`if|unless score` 单目标限制的官方说明。
@@ -145,3 +146,5 @@ netherite_horse_armor
 - [titleraw Command](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/commandsreference/examples/commands/titleraw?view=minecraft-bedrock-stable)。
 
 链接核实日期：2026-11-15。官方文档会继续更新；如果文档页面与固定目标客户端表现冲突，以目标客户端测试结果为准，并记录客户端版本。
+
+Wiki、社区文档、官方问题跟踪器和用户语料的可信度与许可不同，选择顺序见 [wiki-and-sources.md](wiki-and-sources.md)。

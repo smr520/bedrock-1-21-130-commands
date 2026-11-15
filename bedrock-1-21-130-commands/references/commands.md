@@ -150,7 +150,7 @@ minecraft:keep_on_death
 /execute if score .clock timer matches 100.. run say 5 秒到了
 ```
 
-旧语法 `execute @a ~ ~ ~ say hi` 在 1.21.130 会直接报错。
+在当前客户端中新输入 `execute @a ~ ~ ~ say hi` 会报错。升级旧地图时，命令方块还可能保存旧命令版本；需要打开、修改并保存相关方块后再测试，详见 [legacy-to-modern.md](legacy-to-modern.md)。
 
 ## 记分板
 
@@ -177,6 +177,7 @@ minecraft:keep_on_death
 - `operation` 运算符：`=`、`+=`、`-=`、`*=`、`/=`、`%=`、`<`、`>`、`><`。
 - 假玩家用 `.` 开头，例如 `.clock`、`.total`；不要和真实玩家重名。
 - `reset` 是删除分数，不是设成 0。
+- `reset * <obj>` 会清理该目标下所有已经记录的玩家和假玩家，包括离线记录。只对独立事件目标使用，避免误删长期金币、冷却或档案。
 - `if/unless score` 不能比较可能匹配多人的选择器；详见 [selectors-and-scoreboard.md](selectors-and-scoreboard.md)。
 
 ## 文本、声音、粒子

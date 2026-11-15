@@ -2,7 +2,7 @@
 name: bedrock-1-21-130-commands
 description: 编写、现代化、排错和审计 Minecraft 基岩版 1.21.130 的纯指令命令方块系统；适用于菜单、商店、奖励、计时、多人配对、分数比较、状态机、旧语法转换、执行分叉性能预算、减少命令方块数量及不需要附加包的完整搭建方案。
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "一个高质量的神秘人"
   github: "smr520"
   qq_group: "1031096520"
@@ -103,6 +103,7 @@ B2【连锁｜无条件｜保持开启｜延迟0】
 - 用户提供教程合集时，先按目录、扩展名、编码和内容哈希盘点，再抽样读取相关文件，不整批加载。
 - 批量复核可运行 `python scripts/scan-corpora.py <合集根目录> --summary-only`；脚本自测用 `--self-test`。
 - 从外部资料提取触发方式、状态字段、判定顺序和用户体验；命令本身按目标版本重写。
+- 查 Wiki、社区教程、版本差异或许可规则时，先读 [wiki-and-sources.md](references/wiki-and-sources.md)。官方 Stable 页面会滚动更新，不能拿页面当前内容直接证明 1.21.130 行为。
 - 文件名中的 `1CB`、`5CB` 通常只表示核心部分，不能当作初始化、收尾和测试后的总预算。
 - 旧命令按 [legacy-to-modern.md](references/legacy-to-modern.md) 做语义转换，不能只做字符串替换。
 - `.docx`、`.pdf` 中的截图可能包含文字提取不到的方块设置；`.bdx`、`.mcworld`、`.mcaddon` 不是纯指令文本；`.exe`、未知脚本和导入工具不运行。
@@ -152,7 +153,8 @@ node (Join-Path $skillRoot "scripts\plan-recipes.mjs") player-hud shop-single-op
 - 基岩版记分板目标使用 `dummy`；不能直接读取玩家真实生命、饥饿或经验等级作为自动目标。
 - 纯指令不能可靠读取任意实体真实生命值；BOSS 血条和自定义生命通常是模拟分数，普通攻击不会自动同步。
 - `scoreboard` 冷却表示在线且链运行时的累计刻数，不是现实自然日。
-- 纯选择器无法可靠观察玩家离线事件；需要额外运行环境才能精确识别每次下线或每次重新登录。
+- `@a` 只选择在线玩家。专用记分项配合 `add @a ... 0`、`reset *` 和 `set @a ... 1` 可在 4 格识别命令链持续运行期间的断开再进；完整退出世界再打开没有独立的世界载入信号，必须单列实机测试。玩家真正离开后，不能再对那名离线玩家本人执行命令。
+- 前后在线人数差可以检测“这一游戏刻玩家总数净减少”，但不能指出具体是谁离开；同一游戏刻有人进入又有人离开时，净差可能为 0 而漏报。
 - 雪球落点、`@p` 和最近实体只能做近似归属；多人挤近时必须说明误选可能。
 - 纯原版可以显示标题、动作栏、聊天文本和侧边栏；复杂交互界面需要资源包，不能伪装成纯指令方案。
 
@@ -169,6 +171,7 @@ node (Join-Path $skillRoot "scripts\plan-recipes.mjs") player-hud shop-single-op
 | 配方依赖、方块预算和多人能力登记 | [recipe-registry.json](references/recipe-registry.json) |
 | 验收与实机测试 | [test-matrix.md](references/test-matrix.md) |
 | 旧语法和旧教程转换 | [legacy-to-modern.md](references/legacy-to-modern.md) |
+| Wiki 选择、来源等级、许可、版本核对和按需抓取 | [wiki-and-sources.md](references/wiki-and-sources.md) |
 | 1.21.130 新 ID 和版本差异 | [version-1.21.130.md](references/version-1.21.130.md) |
 | 国际版与网易 ID、能力边界 | [channel-matrix.md](references/channel-matrix.md) |
 | 可继续实现的系统和建议预算 | [system-ideas.md](references/system-ideas.md) |

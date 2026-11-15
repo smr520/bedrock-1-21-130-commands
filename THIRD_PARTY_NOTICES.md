@@ -13,17 +13,24 @@ Minecraft is a trademark of Microsoft. This project is not affiliated with, endo
 Command names, identifiers, and platform behavior are referenced for interoperability. Official documentation is linked from the skill references:
 
 - Minecraft 1.21.130 Bedrock changelog
+- Microsoft Learn, "More Sources of Information about Minecraft: Bedrock Edition"
 - Minecraft Beta & Preview 1.19.60.25, MCPE-156279 score-selector fix
 - Microsoft Learn command-block documentation
 - Microsoft Learn target-selector documentation
 - Microsoft Learn command reference
+- MicrosoftDocs/minecraft-creator
+- Mojira, MCPE-164725
 
 Community documentation was consulted for syntax verification and cross-checking:
 
 - Bedrock Wiki, "Comparing And Retrieving Scores"
+- Bedrock Wiki command-block, selector, execute, execution-forking, score and player-event pages
+- Minecraft Wiki and Chinese Minecraft Wiki, used for version cross-checking only
 - MC百科《基岩版入门指令解析教程》
 - 量筒的 Minecraft 基岩版开发文档
 
 The release paraphrases the relevant platform behavior and contains original command examples. It does not redistribute those tutorial pages, archives, images, or downloadable example worlds/function packs.
+
+The Microsoft Creator documentation repository licenses prose documentation under CC BY 4.0 and its code under the MIT License. Bedrock Wiki content and code samples follow the notice on the relevant page or repository; this project links to them and rewrites command examples rather than bundling them. Minecraft Wiki prose is licensed CC BY-NC-SA 3.0, so it is used for online fact checking and links only; no Minecraft Wiki article text or tables are redistributed in this Apache-2.0 package. The MC百科 tutorial states that reproduction requires permission, so only its URL and high-level context are referenced.
 
 If future contributors copy third-party code, text, images, maps, or structures into the project, they must add the applicable attribution and license notice before distribution.

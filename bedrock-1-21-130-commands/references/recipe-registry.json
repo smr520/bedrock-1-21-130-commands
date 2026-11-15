@@ -140,14 +140,19 @@
     {
       "id": "welcome-clock",
       "file": "examples/welcome-clock.md",
-      "blockCount": 4,
-      "objectives": ["welcome"],
+      "blockCount": 5,
+      "objectives": ["join_epoch"],
       "tags": [],
       "multiplayer": "any",
       "usesActionbar": false,
       "tickingArea": true,
       "status": "static-only",
-      "tests": ["first seen only", "delayed repeat", "world reload"]
+      "tests": [
+        "active-world rejoin once",
+        "two players join on the same tick",
+        "delayed repeat",
+        "world reload"
+      ]
     },
     {
       "id": "carpet-extraction",

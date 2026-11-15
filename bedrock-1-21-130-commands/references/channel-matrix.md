@@ -8,6 +8,7 @@
 | --- | --- | --- |
 | `official` | 官方文档明确写出，且版本匹配 | 可以，仍应记录目标版本 |
 | `client-confirmed` | 已在目标客户端实际执行成功 | 可以 |
+| `community-doc` | 维护中的社区技术文档明确写出，但未在目标客户端确认 | 只能作为实现线索；与官方资料交叉核对后再交付 |
 | `corpus-observed` | 只在用户提供的旧教程或语料中出现 | 只能作为线索，交付前验证 |
 | `unverified` | 名称、命名空间或参数无法确认 | 不能当作可用命令 |
 
@@ -70,6 +71,9 @@
 ## 官方参考
 
 - [Minecraft 1.21.130 Bedrock Changelog](https://www.minecraft.net/en-us/article/minecraft-1-21-130-bedrock-changelog)
+- [More Sources of Information about Minecraft: Bedrock Edition](https://learn.microsoft.com/en-us/minecraft/creator/documents/moreinfosources?view=minecraft-bedrock-stable)
 - [Getting Started with Command Blocks](https://learn.microsoft.com/en-us/minecraft/creator/documents/commandblocks?view=minecraft-bedrock-stable)
 - [Target Selectors](https://learn.microsoft.com/en-us/minecraft/creator/documents/targetselectors?view=minecraft-bedrock-stable)
 - [execute Command](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/commandsreference/examples/commands/execute?view=minecraft-bedrock-stable)
+
+来源分类、社区 Wiki 路由、许可和版本核对流程见 [wiki-and-sources.md](wiki-and-sources.md)。
