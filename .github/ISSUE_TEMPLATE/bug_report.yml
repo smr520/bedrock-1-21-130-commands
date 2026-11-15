@@ -1,0 +1,79 @@
+name: 缺陷报告
+description: 报告可以复现的命令、方块链、文档或脚本错误
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。请提供最小复现步骤，并先移除玩家名、服务器地址、令牌和其他私密信息。
+
+  - type: dropdown
+    id: edition
+    attributes:
+      label: 目标版本
+      options:
+        - Minecraft Bedrock 1.21.130
+        - 其他国际版基岩版本
+        - 网易中国版
+        - 不确定
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 平台
+      options:
+        - Windows
+        - Android
+        - iOS / iPadOS
+        - Xbox / PlayStation / Switch
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: chain
+    attributes:
+      label: 命令方块设置与最小命令
+      description: 请写清循环/连锁/脉冲、条件、红石状态、延迟和命令文本。
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期结果
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果与报错
+      description: 可附上“上一格输出”、校验脚本结果或截图说明。
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 从新世界创建开始写出最少步骤。
+    validations:
+      required: true
+
+  - type: textarea
+    id: checked
+    attributes:
+      label: 已做的检查
+      description: 例如 /scoreboard players list、tickingarea、区块加载或背包状态。
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 隐私确认
+      options:
+        - label: 我已移除账号、服务器地址、令牌、密码和其他敏感信息
+          required: true

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 使用问题与开放讨论
+    url: https://github.com/smr520/bedrock-1-21-130-commands/discussions
+    about: 命令思路、兼容性、改法和不需要提交为缺陷的问题。
+  - name: 私密安全报告
+    url: https://github.com/smr520/bedrock-1-21-130-commands/security/advisories/new
+    about: 不要在公开 Issue 中提交密钥、账号或可利用的安全细节。

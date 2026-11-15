@@ -74,6 +74,15 @@ HUD 仲裁的 3 格只统计仲裁链本身。接入现有菜单、撤离或 HUD
 - 服务器性能取决于玩家数、每刻选择器范围和实体数量；通过静态检查不代表已经完成性能压测。
 - 结构文件、行为包、资源包、函数、`schedule`、`reload` 和脚本不会作为纯命令方块方案的隐式依赖。
 
+## 反馈与支持
+
+- 可复现的缺陷和明确的功能请求：[GitHub Issues](https://github.com/smr520/bedrock-1-21-130-commands/issues)
+- 使用方法、命令思路和开放式讨论：[GitHub Discussions](https://github.com/smr520/bedrock-1-21-130-commands/discussions)
+- 快速交流：QQ 群 **1031096520**
+- 安全漏洞：使用仓库的 [Private vulnerability reporting](https://github.com/smr520/bedrock-1-21-130-commands/security/advisories/new)，不要在公开 Issue 中发布密钥或可利用细节
+
+提问时请写出目标基岩版本、客户端平台、命令方块设置、预期结果、实际结果和最小复现步骤。命令文本和完整报错越具体，越容易定位。
+
 ## 验证状态
 
 `v1.0.0` 已通过文档结构、命令语法、链级结构、配方预算、脚本自测和敏感信息审计。发布环境未安装 Minecraft 客户端，因此所有配方仍标记为 `static-only`，没有宣称完成 1.21.130 实机验收。
