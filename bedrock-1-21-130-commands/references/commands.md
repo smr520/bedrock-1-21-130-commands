@@ -5,7 +5,7 @@
 ## 通用语法
 
 - 坐标：绝对 `100 64 -20`；相对 `~ ~1 ~`；局部 `^ ^ ^3`。
-- 选择器：`@a`、`@p`、`@r`、`@e`、`@n`、`@s`、`@initiator`。
+- 选择器：`@a`、`@p`、`@r`、`@e`、`@n`、`@s`、`@initiator`。`@initiator` 只用于 NPC 对话交互，不能当作命令方块的按钮按压者。
 - 范围：`1..5`、`..5`、`1..`。
 - 字符串含空格时加双引号：`name="Steve"`。
 - 方块状态：`["state"=value]`，例如 `["color"="red"]`。
@@ -18,6 +18,7 @@
 | --- | --- | --- |
 | 切换模式 | `/gamemode <survival\|creative\|adventure\|spectator\|default> [player]` | 也接受 `s/c/a/d`；目标写在模式后面 |
 | 传送 | `/tp <target> <x y z> [yRot xRot]` | `/teleport` 同义 |
+| 传送到实体 | `/tp <target> <destination: target> [checkForBlocks]` | 实体目的地必须恰好解析成一个实体；`@a`、`@e` 要加 `c=1` 或改用 `@p` |
 | 传送并朝向 | `/tp <target> <x y z> facing <x y z>` | 也可 `facing entity <target> eyes\|feet` |
 | 给物品 | `/give <player> <item> [amount] [data] [components]` | 无 NBT |
 | 清物品 | `/clear <player> [item] [data] [maxCount]` | 不写 item 清空背包 |
@@ -99,8 +100,11 @@ minecraft:keep_on_death
 ## execute（1.19.50+ 新语法）
 
 ```text
-/execute <子命令链> run <命令>
+动作型：/execute <子命令链> run <命令>
+纯条件型：/execute <子命令链> if|unless <完整条件>
 ```
+
+第二行是合法的“纯条件型”形式，用于只需要成功/失败结果、比较器输出或后续有条件连锁的方块。它不能以 `as`、`at`、`positioned` 等修饰子命令单独收尾；动作型命令仍要使用 `run <命令>`。
 
 | 子命令 | 作用 |
 | --- | --- |
@@ -121,6 +125,21 @@ minecraft:keep_on_death
 | `if/unless score <target> <obj> matches <range>` | 判断分数范围 |
 | `if/unless score <target> <obj> <op> <target> <obj>` | 比较两个分数；`<op>` 为 `=` `<` `<=` `>` `>=` |
 | `run <command>` | 执行命令，放最后 |
+
+执行上下文和分叉必须一起检查：
+
+- `as` 只改变执行者，不改变位置；`at` 只改变位置、旋转和维度，不改变执行者。
+- `as @a`、`at @a` 会为每个匹配目标生成一个执行实例。连续使用多个多目标子命令时，实例数是乘积，例如 20 个来源 × 20 个目标约产生 400 个实例。
+- 需要遍历但不需要全服规模时，先加 `tag=`、`r=`、`c=` 等限制。不能为了省一格让每刻循环扫描全部实体。
+- `execute ... if score` 的运算符两侧都必须解析为单个目标。自基岩版 1.19.60 起，`@a`、`@e` 这类可能返回多人的选择器不能直接用于比较；加 `c=1`，或使用 `as` 保存一侧、再通过 `at` 和 `@s`／`@p` 遍历另一侧。
+
+两个玩家逐对比较的通用结构：
+
+```text
+/execute as @a[tag=source,r=3,c=1] at @s at @a[tag=target,rm=0.1] if score @s coins = @p coins run tp @s @p
+```
+
+这里 `@s` 始终是被检查的来源，第二次 `at` 把执行位置切到当前对比目标，因此 `@p` 指向该目标。这个结构会产生“来源数 × 目标数”个实例，只适合小集合；大集合应先在聊天栏之外明确性能预算，或缩小标签和范围。
 
 示例：
 
@@ -158,6 +177,7 @@ minecraft:keep_on_death
 - `operation` 运算符：`=`、`+=`、`-=`、`*=`、`/=`、`%=`、`<`、`>`、`><`。
 - 假玩家用 `.` 开头，例如 `.clock`、`.total`；不要和真实玩家重名。
 - `reset` 是删除分数，不是设成 0。
+- `if/unless score` 不能比较可能匹配多人的选择器；详见 [selectors-and-scoreboard.md](selectors-and-scoreboard.md)。
 
 ## 文本、声音、粒子
 
@@ -273,3 +293,6 @@ minecraft:keep_on_death
 10. 先改分数再判断，导致后面的命令选择器不匹配；用临时 `tag` 锁定。
 11. `@e` 包括玩家；只选实体要加 `type=!player`。
 12. 全角 `～`、`，`、`：`、`｜` 粘进命令里。
+13. 把 `@a[tag=x]` 直接放进 `if score`，即使当前只有一个人带标签，也违反单目标约束；加 `c=1` 或改成逐对遍历。
+14. `/tp @s @a[tag=destination]` 把可能匹配多人的选择器当成目的地；实体目的地必须是一个实体。
+15. 只看到总方块数少，就连续堆叠 `as @a` 和 `at @a`；执行分叉会按乘法增长，需要同时报告来源数、目标数和每刻触发频率。

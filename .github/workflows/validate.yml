@@ -1,0 +1,53 @@
+name: Validate skill
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Commands, chains and skill package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: bedrock-1-21-130-commands
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check script syntax
+        run: find scripts -maxdepth 1 -name '*.mjs' -print0 | xargs -0 -n1 node --check
+
+      - name: Validate skill package
+        run: node scripts/validate-skill.mjs
+
+      - name: Run validator regression tests
+        run: node scripts/selftest.mjs
+
+      - name: Test corpus scanner
+        run: python -B -X utf8 scripts/scan-corpora.py --self-test
+
+      - name: Validate recipe planning
+        run: node scripts/plan-recipes.mjs server-starter-core player-hud hud-arbiter

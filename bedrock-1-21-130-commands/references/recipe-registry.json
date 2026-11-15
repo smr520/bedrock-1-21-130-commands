@@ -160,6 +160,18 @@
       "tickingArea": true,
       "status": "static-only",
       "tests": ["leave reset", "safe destination", "simultaneous players"]
+    },
+    {
+      "id": "same-score-pair-teleport",
+      "file": "examples/same-score-pair-teleport.md",
+      "blockCount": 1,
+      "objectives": ["pair_score"],
+      "tags": ["teleport_eligible"],
+      "multiplayer": "nearest-player",
+      "usesActionbar": false,
+      "tickingArea": false,
+      "status": "static-only",
+      "tests": ["A and B equal scores", "unequal scores do nothing", "one player offline", "same-button direction", "two players crowding the trigger"]
     }
   ]
 }

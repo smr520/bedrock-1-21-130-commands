@@ -13,6 +13,7 @@ body:
       label: 目标版本
       options:
         - Minecraft Bedrock 1.21.130
+        - Minecraft Bedrock 1.21.120
         - 其他国际版基岩版本
         - 网易中国版
         - 不确定

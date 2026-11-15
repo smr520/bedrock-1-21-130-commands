@@ -112,6 +112,7 @@ netherite_horse_armor
 
 - `/clone`、`/structure`、`/place` 在覆盖自定义方块时会触发脚本 API 的 `onBreak` 事件（beta API）。纯命令方块不受影响；只有脚本包要注意副作用。
 - 其余命令语法与 1.21.120 一致；`execute` 仍是 1.19.50 之后的新语法。
+- 自 1.19.60 起，`execute if|unless score` 不再接受可能匹配多个实体的 `@a`、`@e` 选择器。1.21.120 和 1.21.130 都没有恢复旧行为。
 
 ## 对纯指令的影响
 
@@ -139,6 +140,7 @@ netherite_horse_armor
 - [Minecraft 1.21.130 Bedrock Changelog](https://www.minecraft.net/en-us/article/minecraft-1-21-130-bedrock-changelog)，2025-12-09 发布。
 - [Getting Started with Command Blocks](https://learn.microsoft.com/en-us/minecraft/creator/documents/commandblocks?view=minecraft-bedrock-stable)。
 - [execute Command](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/commandsreference/examples/commands/execute?view=minecraft-bedrock-stable)。
+- [Minecraft Beta & Preview 1.19.60.25：MCPE-156279](https://feedback.minecraft.net/hc/en-us/articles/11995250732557-Minecraft-Beta-Preview-1-19-60-25)，`if|unless score` 单目标限制的官方说明。
 - [Target Selectors](https://learn.microsoft.com/en-us/minecraft/creator/documents/targetselectors?view=minecraft-bedrock-stable)。
 - [titleraw Command](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/commandsreference/examples/commands/titleraw?view=minecraft-bedrock-stable)。
 

@@ -10,7 +10,7 @@
 | `@e` | 所有实体（**包括玩家**） |
 | `@n` | 最近的实体（基岩版专属） |
 | `@s` | 当前执行者 |
-| `@initiator` | 与 NPC 交互的玩家 |
+| `@initiator` | 与 NPC 交互的玩家；只在 NPC 对话命令中有效 |
 
 只选实体：`@e[type=!player]`。
 
@@ -168,6 +168,20 @@
 - `test` 成功时返回成功数，适合接有条件连锁。
 - `reset` 删除分数，不是设 0。
 - `list <player>` 可查该玩家所有目标，调试很有用。
+
+### `execute if score` 的单目标限制
+
+`execute ... if score` 进行比较时，运算符左右都必须解析成**一个**目标。`@a`、`@e` 即使加了 `tag=` 或 `scores=`，也可能同时匹配多人；直接放进分数比较会失败。这个限制从基岩版 1.19.60 起明确生效，[官方 MCPE-156279 修复说明](https://feedback.minecraft.net/hc/en-us/articles/11995250732557-Minecraft-Beta-Preview-1-19-60-25)写明 `if|unless score` 不再接受可能返回多个实体的 `@a`、`@e` 选择器；1.21.120 与 1.21.130 没有恢复旧行为。
+
+错误写法：`execute if score @a[tag=turn] coins = @s coins run say 同分`。这里的 `@a` 没有 `c=1`，可能匹配多人。
+
+需要在“两个玩家集合”之间逐对比较时，用执行分叉：`as` 保存被检查方，第一次 `at @s` 固定它的位置，第二次 `at` 遍历对比方。进入第二次 `at` 后，`@s` 仍指向被检查方，`@p` 指向当前对比位置的最近玩家；因此 `if score @s ... = @p ...` 两边都是单目标。这个结构也与 [Bedrock Wiki 的匹配分数写法](https://wiki.bedrock.dev/commands/comparing-scores)一致。
+
+```text
+/execute as @a[tag=trigger,r=3,c=1] at @s at @a[tag=eligible,rm=0.1] if score @s score = @p score run tp @s @p
+```
+
+这条示例从按钮附近最多选择一名 `trigger`，再遍历 `eligible` 中的其他玩家，把触发方传送到当前同分目标。`c=1`、`r=3` 和标签限制既保证单目标，也限制执行分叉数量。`@p` 仍是位置近似；同一时间只应有一名操作者靠近按钮。
 
 ### 运算
 

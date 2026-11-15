@@ -12,6 +12,7 @@
 | `extraction.md` | 5 格地毯撤离点：累计、离开归零、传送 |
 | `player-hud.md` | 1 格玩家状态动作栏，直接读取多个分数 |
 | `hud-arbiter.md` | 3 格 HUD 仲裁层：菜单优先于撤离，撤离优先于普通状态；不含被接入系统的状态与动作块 |
+| `same-score-pair-teleport.md` | 1 格同分双人互传：双重遍历比较单个目标，同一按钮按触发者传送 |
 
 更多模板在 `../references/systems.md`：
 

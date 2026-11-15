@@ -92,7 +92,7 @@ B2【连锁｜无条件｜保持开启｜延迟0】
 | `execute always run ...` | 基岩版没有 `always`；用循环命令方块持续执行 |
 | `execute if weather ...` | 基岩版不能直接查询天气；只能由改变天气的机关记录自定义状态 |
 | `tellraw @a ["",{"text":"hi","color":"green"}]` | `tellraw @a {"rawtext":[{"text":"§ahi"}]}` |
-| `scoreboard players test @a coins 1..` | `execute if score @a coins matches 1..` |
+| `scoreboard players test @a coins 1..` | 对每名玩家执行时用 `execute as @a if score @s coins matches 1.. run ...`；只判断“有人满足”时用 `execute if entity @a[scores={coins=1..}] run ...` |
 
 ## 常见旧写法拆解
 
@@ -161,6 +161,34 @@ B2【连锁｜无条件｜保持开启｜延迟0】
 ```
 
 自定义实体才需要 `namespace:entity`。
+
+### 7. 多个玩家不能直接放进 `if score`
+
+自基岩版 1.19.60 起，`execute ... if|unless score` 的运算符两侧必须解析为单个目标。`@a`、`@e` 即使加了 `tag=`、`scores=` 或当前只命中一名玩家，也不应直接写进比较位置。
+
+把旧的“测试所有玩家”拆成两种语义：
+
+```text
+# 每名满足条件的玩家各自执行一次
+/execute as @a if score @s coins matches 1.. run say 我有正数金币
+
+# 只判断全服是否存在满足条件的人
+/execute if entity @a[scores={coins=1..}] run say 至少一名玩家有正数金币
+```
+
+不要写成：
+
+```text
+execute if score @a coins matches 1.. run say 至少一名玩家有正数金币
+```
+
+需要在两组玩家间逐对比较时，用 `as → at @s → at 对比集合` 保存两种上下文：
+
+```text
+/execute as @a[tag=source,c=1] at @s at @a[tag=target,rm=0.1] if score @s coins = @p coins run say 找到同分目标
+```
+
+进入第二次 `at` 后，`@s` 仍是来源，`@p` 是当前目标。多目标 `at` 会产生执行分叉，实例数按来源数与目标数相乘；大集合先用 `tag=`、`r=`、`c=` 限制。
 
 ## 方块数据值 → 方块状态
 

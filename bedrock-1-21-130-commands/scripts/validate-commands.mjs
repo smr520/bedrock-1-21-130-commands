@@ -326,6 +326,92 @@ function validateScoreboard(line, cmd) {
   }
 }
 
+function targetCanMatchMultiple(target) {
+  const match = target.match(/^@([aenprs])(?:\[(.*)\])?$/i);
+  if (!match) return false;
+  const selector = match[1].toLowerCase();
+  const body = match[2] || '';
+  const count = body.match(/(?:^|,)c=(-?\d+)(?:,|$)/i)?.[1];
+  const absoluteCount = count === undefined ? 1 : Math.abs(Number(count));
+  if (absoluteCount === 0) return false;
+
+  if (selector === 'a' || selector === 'e') return count === undefined || absoluteCount !== 1;
+  if (selector === 'p' || selector === 'r' || selector === 'n') return count !== undefined && absoluteCount > 1;
+  return false;
+}
+
+function validateScoreComparisons(line, cmd) {
+  const tokens = tokenize(cmd);
+  for (let index = 0; index < tokens.length - 5; index++) {
+    if (!['if', 'unless'].includes(tokens[index]?.toLowerCase()) || tokens[index + 1] !== 'score') continue;
+    if (tokens[index + 4] === 'matches') {
+      const target = tokens[index + 2];
+      if (targetCanMatchMultiple(target)) {
+        err(
+          line,
+          `execute ${tokens[index]} score matches 的目标 ${target} 可能匹配多个实体；目标必须解析为单一实体，请加 c=1 或改用 execute as`,
+          cmd
+        );
+      }
+      continue;
+    }
+    if (!['=', '<', '<=', '>', '>='].includes(tokens[index + 4])) continue;
+
+    for (const target of [tokens[index + 2], tokens[index + 5]]) {
+      if (targetCanMatchMultiple(target)) {
+        err(
+          line,
+          `execute ${tokens[index]} score 的比较目标 ${target} 可能匹配多个实体；两侧都必须解析为单一目标，请加 c=1 或改用双重遍历`,
+          cmd
+        );
+      }
+    }
+  }
+}
+
+function validateTeleportDestination(line, cmd) {
+  const tokens = tokenize(cmd);
+  let index = -1;
+  if (['tp', 'teleport'].includes(tokens[0]?.toLowerCase())) {
+    index = 0;
+  } else {
+    const run = tokens.findIndex(token => token.toLowerCase() === 'run');
+    if (run >= 0 && ['tp', 'teleport'].includes(tokens[run + 1]?.toLowerCase())) index = run + 1;
+  }
+  if (index < 0 || tokens.length < index + 3) return;
+
+  const destination = tokens[index + 2];
+  if (targetCanMatchMultiple(destination)) {
+    err(
+      line,
+      `tp/teleport 的实体目的地 ${destination} 可能匹配多个实体；目的地必须解析为单一实体，请加 c=1`,
+      cmd
+    );
+  }
+}
+
+function isCompleteConditionOnlyExecute(tokens) {
+  for (let index = 0; index < tokens.length - 1; index++) {
+    if (!['if', 'unless'].includes(tokens[index]?.toLowerCase())) continue;
+    const kind = tokens[index + 1]?.toLowerCase();
+    const end = tokens.length;
+
+    if (kind === 'block') {
+      if (end === index + 6) return true;
+      if (end === index + 7 && tokens[index + 6]?.startsWith('[')) return true;
+    }
+    if (kind === 'blocks') {
+      if (end === index + 12 && ['all', 'masked'].includes(tokens[index + 11]?.toLowerCase())) return true;
+    }
+    if (kind === 'entity' && end === index + 3) return true;
+    if (kind === 'score') {
+      if (end === index + 6 && tokens[index + 4]?.toLowerCase() === 'matches') return true;
+      if (end === index + 7 && ['=', '<', '<=', '>', '>='].includes(tokens[index + 4])) return true;
+    }
+  }
+  return false;
+}
+
 function validateBlockData(line, cmd) {
   const t = tokenize(cmd);
   if (t[0] === 'setblock' && t.length >= 6 && /^\d+$/.test(t[5])) {
@@ -390,11 +476,11 @@ lines.forEach((raw, i) => {
     return;
   }
 
-  // 新 execute 必须有 run
+  // 动作型 execute 必须有 run；纯条件型必须以完整 if/unless 结尾
   if (first === 'execute') {
     const t = tokenize(cmd);
-    if (!t.includes('run')) {
-      err(line, 'execute 缺少 run；新语法必须以 run <命令> 结尾', found);
+    if (!t.includes('run') && !isCompleteConditionOnlyExecute(t)) {
+      err(line, 'execute 既没有 run，也没有以完整的 if/unless 条件子命令结尾', found);
     }
     if (/\bexecute\s+always\b/i.test(cmd)) {
       err(line, '基岩版没有 execute always；持续执行请使用循环命令方块', found);
@@ -403,6 +489,8 @@ lines.forEach((raw, i) => {
       err(line, '基岩版不能直接 execute if weather；用机关维护自定义天气状态', found);
     }
   }
+  if (/\b(?:if|unless)\s+score\b/i.test(cmd)) validateScoreComparisons(line, cmd);
+  validateTeleportDestination(line, cmd);
   if (/\s&&\s/.test(cmd)) {
     err(line, '检测到 && 串联命令；现代命令方块应拆成独立动作并使用普通/有条件连锁', found);
   }
@@ -547,11 +635,7 @@ lines.forEach((raw, i) => {
 });
 
 if (text.includes('\uFFFD')) {
-  warnings.push({
-    line: 0,
-    msg: '文件里有替换字符 �，可能不是 UTF-8（GBK 文件先用 GBK 打开/转换）',
-    cmd: ''
-  });
+  err(0, '文件包含 U+FFFD 替换字符，可能不是有效 UTF-8；先用正确编码重新保存');
 }
 
 if (!quiet) {
