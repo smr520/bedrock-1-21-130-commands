@@ -1,0 +1,303 @@
+#!/usr/bin/env node
+/**
+ * 校验 skill 的入口、命令示例和声明方块数。
+ * 用法: node validate-skill.mjs [--quiet]
+ */
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const quiet = process.argv.includes('--quiet');
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const root = path.dirname(scriptDir);
+const commandValidator = path.join(scriptDir, 'validate-commands.mjs');
+const chainValidator = path.join(scriptDir, 'validate-chains.mjs');
+const errors = [];
+
+const OPEN = '\u3010';
+const CLOSE = '\u3011';
+const SEP = '\uff5c';
+const notationRe = /^([A-Za-z]*\d+)\u3010([^\u3011]+)\u3011$/;
+
+function fail(file, line, message) {
+  errors.push({ file, line, message });
+}
+
+function read(relativePath) {
+  return fs.readFileSync(path.join(root, relativePath), 'utf8');
+}
+
+function validateFrontmatter() {
+  const text = read('SKILL.md');
+  const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
+  if (!match) {
+    fail('SKILL.md', 1, '缺少 YAML frontmatter');
+    return;
+  }
+
+  const name = match[1].match(/^name:\s*(.+)$/m)?.[1]?.trim();
+  const description = match[1].match(/^description:\s*(.+)$/m)?.[1]?.trim();
+  if (name !== path.basename(root)) {
+    fail('SKILL.md', 1, `frontmatter name 必须与目录名一致：${path.basename(root)}`);
+  }
+  if (!description) fail('SKILL.md', 1, 'frontmatter 缺少 description');
+}
+
+function safeRuntimeFiles() {
+  const fixed = [
+    'SKILL.md',
+    'references/block-budget.md',
+    'references/channel-matrix.md',
+    'references/command-blocks.md',
+    'references/commands.md',
+    'references/selectors-and-scoreboard.md',
+    'references/shared-core.md',
+    'references/system-ideas.md',
+    'references/systems.md',
+    'references/test-matrix.md',
+    'references/version-1.21.130.md'
+  ];
+  const examplesDir = path.join(root, 'examples');
+  const examples = fs
+    .readdirSync(examplesDir)
+    .filter(name => name.endsWith('.md'))
+    .map(name => `examples/${name}`);
+  return [...fixed, ...examples];
+}
+
+function countNotationBlocks(relativePath) {
+  const lines = read(relativePath).split(/\r?\n/);
+  let inFence = false;
+  let count = 0;
+  for (const raw of lines) {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith('```')) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence && notationRe.test(trimmed)) count++;
+  }
+  return count;
+}
+
+function runCommandValidator(relativePath) {
+  const absolutePath = path.join(root, relativePath);
+  const result = spawnSync(process.execPath, [commandValidator, absolutePath, '--quiet'], {
+    encoding: 'utf8'
+  });
+
+  if (result.status !== 0) {
+    fail(relativePath, 0, '未通过 validate-commands.mjs');
+    if (!quiet) {
+      if (result.stdout?.trim()) process.stderr.write(result.stdout);
+      if (result.stderr?.trim()) process.stderr.write(result.stderr);
+    }
+  }
+}
+
+function runChainValidator() {
+  const files = safeRuntimeFiles().map(file => path.join(root, file));
+  const result = spawnSync(process.execPath, [chainValidator, ...files, '--quiet'], {
+    encoding: 'utf8'
+  });
+  if (result.status !== 0) {
+    fail('scripts/validate-chains.mjs', 0, '运行时文档未通过链级检查');
+    if (!quiet) {
+      if (result.stdout?.trim()) process.stderr.write(result.stdout);
+      if (result.stderr?.trim()) process.stderr.write(result.stderr);
+    }
+  }
+}
+
+function validateRegistry() {
+  const registryPath = 'references/recipe-registry.json';
+  let registry;
+  try {
+    registry = JSON.parse(read(registryPath));
+  } catch (error) {
+    fail(registryPath, 0, `JSON 解析失败: ${error.message}`);
+    return;
+  }
+
+  if (registry.schemaVersion !== 2) fail(registryPath, 0, 'schemaVersion 必须为 2');
+  if (registry.target?.edition !== 'bedrock' || registry.target?.version !== '1.21.130') {
+    fail(registryPath, 0, 'target 必须为 bedrock 1.21.130');
+  }
+  if (registry.target?.commandsOnly !== true) fail(registryPath, 0, 'commandsOnly 必须为 true');
+
+  const componentMap = new Map();
+  if (!Array.isArray(registry.components)) {
+    fail(registryPath, 0, 'components 必须是数组');
+    return;
+  }
+  for (const component of registry.components) {
+    if (component.id) componentMap.set(component.id, component);
+  }
+
+  for (const collection of ['components', 'recipes']) {
+    if (!Array.isArray(registry[collection])) {
+      fail(registryPath, 0, `${collection} 必须是数组`);
+      continue;
+    }
+    const seen = new Set();
+    for (const entry of registry[collection]) {
+      if (!entry.id) {
+        fail(registryPath, 0, `${collection} 中存在缺少 id 的条目`);
+        continue;
+      }
+      if (seen.has(entry.id)) fail(registryPath, 0, `${collection} 重复 id: ${entry.id}`);
+      seen.add(entry.id);
+
+      const document = entry.file || entry.document;
+      if (!document || !fs.existsSync(path.join(root, document))) {
+        fail(registryPath, 0, `${entry.id} 引用了不存在的文件: ${document || '(空)'}`);
+      }
+      if (!['static-only', 'tested'].includes(entry.status)) {
+        fail(registryPath, 0, `${entry.id} 的 status 必须是 static-only 或 tested`);
+      }
+      if (!['any', 'single-operator', 'shared-button', 'nearest-player'].includes(entry.multiplayer)) {
+        fail(registryPath, 0, `${entry.id} 的 multiplayer 值未知`);
+      }
+      for (const field of ['objectives', 'tags', 'tests']) {
+        if (entry[field] !== undefined && !Array.isArray(entry[field])) {
+          fail(registryPath, 0, `${entry.id}.${field} 必须是数组`);
+        }
+      }
+      for (const field of ['usesActionbar', 'tickingArea']) {
+        if (entry[field] !== undefined && typeof entry[field] !== 'boolean') {
+          fail(registryPath, 0, `${entry.id}.${field} 必须是布尔值`);
+        }
+      }
+      if (entry.tests?.some(test => typeof test !== 'string')) {
+        fail(registryPath, 0, `${entry.id}.tests 只能包含字符串`);
+      }
+      for (const objective of entry.objectives || []) {
+        if (!/^[A-Za-z0-9_.-]+$/.test(objective)) {
+          fail(registryPath, 0, `${entry.id} 的目标名不是 ASCII: ${objective}`);
+        }
+      }
+      for (const tag of entry.tags || []) {
+        if (!/^[A-Za-z0-9_.:-]+$/.test(tag)) {
+          fail(registryPath, 0, `${entry.id} 的标签名不是 ASCII: ${tag}`);
+        }
+      }
+      if (!Number.isInteger(entry.blockCount) || entry.blockCount < 1) {
+        fail(registryPath, 0, `${entry.id} 缺少有效的正整数 blockCount`);
+      } else if (collection === 'recipes' && document && fs.existsSync(path.join(root, document))) {
+        const actual = countNotationBlocks(document);
+        if (actual !== entry.blockCount) {
+          fail(registryPath, 0, `${entry.id} 声明 ${entry.blockCount} 格，文档实际 ${actual} 格`);
+        }
+      }
+
+      if (collection === 'recipes' && entry.moduleIds !== undefined) {
+        if (!Array.isArray(entry.moduleIds)) {
+          fail(registryPath, 0, `${entry.id}.moduleIds 必须是数组`);
+        } else {
+          let moduleTotal = 0;
+          for (const moduleId of entry.moduleIds) {
+            const component = componentMap.get(moduleId);
+            if (!component) {
+              fail(registryPath, 0, `${entry.id} 引用了不存在的模块: ${moduleId}`);
+            } else {
+              moduleTotal += component.blockCount;
+            }
+          }
+          if (Number.isInteger(entry.blockCount) && moduleTotal !== entry.blockCount) {
+            fail(
+              registryPath,
+              0,
+              `${entry.id} 的 blockCount=${entry.blockCount}，但 moduleIds 合计 ${moduleTotal}`
+            );
+          }
+        }
+      }
+    }
+  }
+}
+
+function validateMarkdownLinks(relativePath) {
+  const text = read(relativePath);
+  const linkRe = /\[[^\]]+\]\(([^)]+)\)/g;
+  for (const match of text.matchAll(linkRe)) {
+    const target = match[1].trim().replace(/^<|>$/g, '').split('#')[0];
+    if (!target || /^(?:https?:|mailto:)/i.test(target)) continue;
+    const resolved = path.resolve(path.dirname(path.join(root, relativePath)), target);
+    if (!fs.existsSync(resolved)) {
+      fail(relativePath, 0, `Markdown 链接目标不存在: ${target}`);
+    }
+  }
+}
+
+function validateExampleStructure(relativePath) {
+  if (!relativePath.startsWith('examples/') || relativePath.endsWith('README.md')) return;
+
+  const text = read(relativePath);
+  const lines = text.split(/\r?\n/);
+  const ids = new Map();
+  let inFence = false;
+  let notationCount = 0;
+
+  lines.forEach((raw, index) => {
+    const line = index + 1;
+    const trimmed = raw.trim();
+    if (trimmed.startsWith('```')) {
+      inFence = !inFence;
+      return;
+    }
+    if (!inFence) return;
+
+    const match = trimmed.match(notationRe);
+    if (!match) return;
+
+    notationCount++;
+    const id = match[1];
+    const settings = match[2].split(SEP).map(part => part.trim()).filter(Boolean);
+    if (settings.length !== 4) {
+      fail(relativePath, line, `${id} 的方块标注不是四段`);
+    }
+    if (ids.has(id)) {
+      fail(relativePath, line, `示例内重复编号 ${id}（首次出现在 L${ids.get(id)}）`);
+    } else {
+      ids.set(id, line);
+    }
+
+    let next = index + 1;
+    while (next < lines.length && !lines[next].trim()) next++;
+    if (next >= lines.length || !lines[next].trim().startsWith('/')) {
+      fail(relativePath, line, `${id} 下一行不是以 / 开头的命令`);
+    }
+  });
+
+  const declared = text.match(/命令方块总数[：:]\s*(\d+)\s*个/);
+  if (declared && Number(declared[1]) !== notationCount) {
+    fail(relativePath, 1, `声明 ${declared[1]} 个命令方块，实际标注 ${notationCount} 个`);
+  }
+}
+
+validateFrontmatter();
+for (const file of safeRuntimeFiles()) runCommandValidator(file);
+runChainValidator();
+validateRegistry();
+for (const file of safeRuntimeFiles()) {
+  validateMarkdownLinks(file);
+  validateExampleStructure(file);
+}
+
+if (!quiet) {
+  console.log(`Skill: ${root}`);
+  console.log(`运行时文档已校验: ${safeRuntimeFiles().length}`);
+  console.log('说明: legacy-to-modern.md 故意包含错误旧语法，不按可直接运行文件整体校验。');
+}
+
+if (errors.length) {
+  for (const item of errors) {
+    const location = item.line ? `L${item.line}: ` : '';
+    console.error(`✖ ${item.file} ${location}${item.message}`);
+  }
+  process.exit(1);
+}
+
+if (!quiet) console.log('通过: skill 结构、运行时命令和示例方块总数一致。');

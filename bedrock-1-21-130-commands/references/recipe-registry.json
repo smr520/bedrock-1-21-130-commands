@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 2,
+  "target": {
+    "edition": "bedrock",
+    "version": "1.21.130",
+    "commandsOnly": true
+  },
+  "components": [
+    {
+      "id": "first-seen",
+      "document": "references/shared-core.md",
+      "blockCount": 3,
+      "objectives": ["core_seen"],
+      "tags": [],
+      "multiplayer": "any",
+      "usesActionbar": false,
+      "status": "static-only"
+    },
+    {
+      "id": "display-bus",
+      "document": "references/shared-core.md",
+      "blockCount": 1,
+      "objectives": ["coins", "level", "exp", "hp"],
+      "tags": [],
+      "multiplayer": "any",
+      "usesActionbar": true,
+      "status": "static-only"
+    },
+    {
+      "id": "display-arbiter",
+      "document": "examples/hud-arbiter.md",
+      "blockCount": 3,
+      "objectives": ["menu", "extract", "level", "exp", "coins", "hp"],
+      "tags": [],
+      "multiplayer": "any",
+      "usesActionbar": true,
+      "status": "static-only"
+    },
+    {
+      "id": "cooldown-cd_attack",
+      "document": "references/shared-core.md",
+      "blockCount": 2,
+      "objectives": ["cd_attack"],
+      "tags": [],
+      "multiplayer": "any",
+      "usesActionbar": false,
+      "status": "static-only"
+    },
+    {
+      "id": "cooldown-cd_buff",
+      "document": "references/shared-core.md",
+      "blockCount": 2,
+      "objectives": ["cd_buff"],
+      "tags": [],
+      "multiplayer": "any",
+      "usesActionbar": false,
+      "status": "static-only"
+    },
+    {
+      "id": "transaction-lock",
+      "document": "references/shared-core.md",
+      "blockCount": 5,
+      "objectives": ["coins"],
+      "tags": ["tx_shop"],
+      "multiplayer": "shared-button",
+      "usesActionbar": false,
+      "status": "static-only"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "server-starter-core",
+      "file": "references/shared-core.md",
+      "moduleIds": [
+        "first-seen",
+        "display-bus",
+        "cooldown-cd_attack",
+        "cooldown-cd_buff",
+        "transaction-lock"
+      ],
+      "blockCount": 13,
+      "objectives": ["core_seen", "coins", "level", "exp", "hp", "cd_attack", "cd_buff"],
+      "tags": ["tx_shop"],
+      "multiplayer": "shared-button",
+      "usesActionbar": true,
+      "tickingArea": true,
+      "status": "static-only",
+      "tests": ["first seen only", "HUD coexistence", "two simultaneous buyers", "tag cleanup"]
+    },
+    {
+      "id": "player-hud",
+      "file": "examples/player-hud.md",
+      "moduleIds": ["display-bus"],
+      "blockCount": 1,
+      "objectives": ["level", "exp", "coins", "hp"],
+      "tags": [],
+      "multiplayer": "any",
+      "usesActionbar": true,
+      "tickingArea": true,
+      "status": "static-only",
+      "tests": ["HUD coexistence", "missing score display"]
+    },
+    {
+      "id": "hud-arbiter",
+      "file": "examples/hud-arbiter.md",
+      "moduleIds": ["display-arbiter"],
+      "blockCount": 3,
+      "objectives": ["menu", "extract", "level", "exp", "coins", "hp"],
+      "tags": [],
+      "multiplayer": "any",
+      "usesActionbar": true,
+      "tickingArea": true,
+      "status": "static-only",
+      "tests": ["menu priority", "extraction priority", "base HUD fallback", "two players independent"]
+    },
+    {
+      "id": "shop-single-operator",
+      "file": "examples/shop.md",
+      "blockCount": 6,
+      "objectives": ["coins"],
+      "tags": [],
+      "multiplayer": "single-operator",
+      "usesActionbar": false,
+      "tickingArea": false,
+      "status": "static-only",
+      "tests": ["exact inventory", "insufficient score", "repeated button"]
+    },
+    {
+      "id": "snowball-menu",
+      "file": "examples/snowball-menu.md",
+      "blockCount": 11,
+      "objectives": ["menu"],
+      "tags": [],
+      "multiplayer": "nearest-player",
+      "usesActionbar": true,
+      "tickingArea": true,
+      "status": "static-only",
+      "tests": ["pitch confirmation", "menu wrap", "HUD coexistence"]
+    },
+    {
+      "id": "welcome-clock",
+      "file": "examples/welcome-clock.md",
+      "blockCount": 4,
+      "objectives": ["welcome"],
+      "tags": [],
+      "multiplayer": "any",
+      "usesActionbar": false,
+      "tickingArea": true,
+      "status": "static-only",
+      "tests": ["first seen only", "delayed repeat", "world reload"]
+    },
+    {
+      "id": "carpet-extraction",
+      "file": "examples/extraction.md",
+      "blockCount": 5,
+      "objectives": ["extract"],
+      "tags": [],
+      "multiplayer": "any",
+      "usesActionbar": true,
+      "tickingArea": true,
+      "status": "static-only",
+      "tests": ["leave reset", "safe destination", "simultaneous players"]
+    }
+  ]
+}

@@ -1,0 +1,201 @@
+# 命令方块：类型、链、延迟与排错
+
+## 三种方块
+
+| 类型 | 中文界面 | 什么时候跑 |
+| --- | --- | --- |
+| Impulse | 脉冲 | 每次收到红石信号跑一次 |
+| Chain | 连锁 | 被前一个方块触发时跑 |
+| Repeat | 循环 | 保持开启时每刻跑；有延迟时每 N 刻跑一次 |
+
+拿方块：
+
+```text
+/give @s command_block
+/give @s chain_command_block
+/give @s repeating_command_block
+```
+
+## 两个开关
+
+| 选项 | 值 | 作用 |
+| --- | --- | --- |
+| 条件 | 无条件 | 不管上一格成功失败都跑 |
+| 条件 | 有条件 | 上一格执行成功才跑 |
+| 红石 | 需要红石 | 必须按钮/拉杆/压力板等供能 |
+| 红石 | 保持开启 | 不需要红石，循环方块会一直跑 |
+
+“有条件”判断的是**上一格命令是否执行成功**，不是分数条件。分数条件请写进命令：
+
+```text
+/execute if score @s coins matches 100.. run say 够了
+```
+
+## 链的方向
+
+连锁方块靠箭头传递，箭头必须指下一格：
+
+```text
+[循环] → [连锁] → [连锁] → [连锁]
+```
+
+- 方块可以横着排、竖着排、拐弯排，但每一格的箭头都要对准下一格。
+- 方向反了，链不会启动；拆掉重放比改方向快。
+- 同一个 tick 内按链顺序执行。
+- 链不能在同一 tick 里绕回自己；绕回去也只执行一次。
+
+## 延迟
+
+- 单位是游戏刻，20 tick ≈ 1 秒。
+- 循环方块：延迟是“隔多久再跑一次”。
+- 脉冲/连锁：延迟是“触发后等多久再跑”。
+- 连锁方块的 `0` 和 `1` 行为不同；默认写 `0`，需要精确 1 tick 时写 `1`。
+- 循环方块的“首刻执行”（Execute on First Tick）只在有延迟时出现；勾上会先跑一次再等延迟。
+
+## 常用起手式
+
+### 1. 每刻根
+
+```text
+【循环｜无条件｜保持开启｜延迟0】
+/scoreboard players add .clock clock 1
+```
+
+后面全部接连锁。每刻根只放最轻的检测，重命令用计时器降频。
+
+### 2. 按钮根
+
+```text
+【脉冲｜无条件｜需要红石｜延迟0】
+/scoreboard objectives add menu dummy "雪球菜单"
+```
+
+后面接连锁，全部 `无条件｜保持开启｜延迟0`。按钮按一次，整条链跑一次。
+
+### 3. 一次性初始化
+
+推荐单独搭一条按钮链：
+
+```text
+A1【脉冲｜无条件｜需要红石｜延迟0】
+/scoreboard objectives add menu dummy "雪球菜单"
+
+A2【连锁｜无条件｜保持开启｜延迟0】
+/scoreboard objectives add clock dummy "全局时钟"
+
+A3【连锁｜无条件｜保持开启｜延迟0】
+/scoreboard players add .clock clock 0
+
+A4【连锁｜无条件｜保持开启｜延迟0】
+/gamerule commandblockoutput false
+```
+
+- A1 用“需要红石”的脉冲方块，按一次按钮完成初始化；A2–A4 接常开无条件连锁。
+- 建目标、设置全局初始值、修改游戏规则这类操作不要塞进循环方块。每刻重复执行既浪费，也容易让修改后的全局状态被悄悄重置。
+- 需要照顾后来加入的玩家时，运行链里可以保留 `scoreboard players add @a <目标> 0`。`add 0` 只给没有分数的对象补零，不覆盖已有进度；不要改用 `set`。
+- 初始化脚本若已执行过，再按一次时 A1 可能失败；后面的“无条件”连锁仍会继续。不要为了让 A1 再次成功而删除已有目标。
+- 不要用“脉冲｜保持开启”当一次性初始化。脉冲方块要在“需要红石”时由按钮或压力板触发；做持续运行请用一个独立的循环根。
+
+### 4. 临时标签锁定
+
+先锁定，再改分数/物品，避免后面的命令判断不到：
+
+```text
+【循环｜无条件｜保持开启｜延迟0】
+/execute as @a[scores={coins=100..},hasitem={item=diamond,quantity=1..}] run tag @s add buying
+
+【连锁｜无条件｜保持开启｜延迟0】
+/execute as @a[tag=buying] run scoreboard players remove @s coins 100
+
+【连锁｜无条件｜保持开启｜延迟0】
+/execute as @a[tag=buying] run clear @s diamond 0 1
+
+【连锁｜无条件｜保持开启｜延迟0】
+/execute as @a[tag=buying] run give @s apple 1
+
+【连锁｜无条件｜保持开启｜延迟0】
+/tag @a[tag=buying] remove buying
+```
+
+如果先扣分，后面 `scores={coins=100..}` 就不匹配了。标签是纯指令里最可靠的“中间变量”。
+
+## 玩家进出的限制
+
+- **进服检测**：`scoreboard players add @a online 0` 把新玩家初始化为 0；再用 `@a[scores={online=0}]` 发欢迎，最后设成 1。分数会存档，所以只触发一次。
+- **每次进服都欢迎**：纯命令方块做不到可靠检测“下线”，因为选择器只能选在线玩家。可改成进服后按按钮、踩压力板；自动识别每次重登需要额外运行环境。
+- **下线检测**：不要相信“每刻 testfor 所有玩家”的写法；离线玩家不能被选择器选中，无法逐個比较。纯指令只能做近似（记录已知玩家名单），不适合通用系统。
+
+## 性能
+
+每刻都跑的东西：
+
+- 不要 `@e` 裸扫；加 `type=`、`r=`、`c=1`。
+- 不要每刻 `tellraw @a`；用计时器降到 1 秒/5 秒。
+- 不要每刻大范围 `fill`/`clone`；拆成按钮触发。
+- 先 `execute if entity`/`if score` 过滤，再执行重命令。
+- 用 `tag` 锁一次，避免同一个玩家每刻重复领奖。
+- 链越长越贵；超过几十格就拆成多个根，用分数/标签交接。
+
+降频模板：
+
+```text
+【循环｜无条件｜保持开启｜延迟0】
+/scoreboard players add .tick timer 1
+
+【连锁｜无条件｜保持开启｜延迟0】
+/execute if score .tick timer matches 20.. run scoreboard players set .tick timer 0
+
+【连锁｜无条件｜保持开启｜延迟0】
+/execute if score .tick timer matches 0 run say 每秒一次
+```
+
+## 加载与游戏规则
+
+```text
+/gamerule commandblocksenabled true
+/gamerule commandblockoutput false
+/gamerule sendcommandfeedback false
+/gamerule maxcommandchainlength 65536
+```
+
+- `commandblocksenabled` 为 false 时所有命令方块失效。
+- `maxcommandchainlength` 为 0 时连锁不执行；不要设 0。
+- `commandblockoutput` 控制命令方块输出；调试时开，正式关。
+- `sendcommandfeedback` 控制命令反馈；正式关。
+- 远处系统用常加载区：
+
+```text
+/tickingarea add 0 0 0 10 10 10 menu
+/tickingarea list
+```
+
+## 排错顺序
+
+1. **上一格输出**：打开命令方块看 Previous Output，先看报错。
+2. **箭头**：连锁方块是否指对下一格。
+3. **条件**：有条件是不是被上一格失败卡住了；先改无条件试。
+4. **红石**：循环根是不是“需要红石”但没供能；连锁是不是被设成了需要红石。
+5. **区块**：玩家离开后是否停了；加 `tickingarea`。
+6. **游戏规则**：`commandblocksenabled`、`maxcommandchainlength`。
+7. **目标不存在**：先跑 `scoreboard objectives list`。
+8. **全角符号**：`～`、`，`、`：`、`｜` 都会让命令解析失败。
+9. **选择器**：`limit`、`distance`、`nbt`、`team` 在基岩版直接失效。
+10. **重复触发**：分数没重置、标签没移除、脉冲根被红石持续供能。
+
+## 输出模板
+
+给用户完整系统时，每格都写成：
+
+```text
+B1【循环｜无条件｜保持开启｜延迟0】
+/持续运行的命令
+
+B2【连锁｜无条件｜保持开启｜延迟0】
+/后续命令
+```
+
+最后补一句：
+
+```text
+摆放：先单独完成初始化链；B1 循环方块放运行链起点，B2 以后接常开无条件连锁，箭头依次指向下一格。
+```
