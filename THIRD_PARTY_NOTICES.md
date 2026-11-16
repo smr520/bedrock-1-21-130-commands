@@ -6,6 +6,39 @@ This release contains original instruction text, original command examples, and 
 
 The Apache-2.0 license applies only to material that the project contributors have the right to license. It does not grant rights to third-party tutorial text, command collections, maps, assets, trademarks, or other material that is not contained in this release.
 
+## MinecraftBE-Command-Building-Skill
+
+The declarative chain-spec workflow and several command-system review ideas were independently adapted with reference to:
+
+- Project: <https://github.com/yixin-amore/MinecraftBE-Command-Building-Skill>
+- Audited commit: `c3e5b0c53c70c3c80bd0e093b84e83da53fec522`
+- Copyright: 2026 yixin-amore
+- License: MIT
+
+The original project contains material for NetEase China, command generation, BDX, building, display entities, and other research assets. This release does not redistribute its archives, generated worlds, images, building generators, command corpora, or full reference text. The included Node.js schema and validator were rewritten for this project, and the documentation was rewritten around the project's NetEase-first, pure command-block scope.
+
+MIT License
+
+Copyright (c) 2026 yixin-amore
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
 ## Minecraft
 
 Minecraft is a trademark of Microsoft. This project is not affiliated with, endorsed by, or sponsored by Microsoft, Mojang Studios, or Minecraft.

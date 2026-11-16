@@ -12,10 +12,11 @@ body:
     attributes:
       label: 目标版本
       options:
-        - Minecraft Bedrock 1.21.130
+        - 网易中国版 3.10 / BE 1.21.130
+        - 其他网易中国版版本
+        - Minecraft Bedrock 1.21.130（国际版兼容）
         - Minecraft Bedrock 1.21.120
         - 其他国际版基岩版本
-        - 网易中国版
         - 不确定
     validations:
       required: true
@@ -28,7 +29,8 @@ body:
         - Windows
         - Android
         - iOS / iPadOS
-        - Xbox / PlayStation / Switch
+        - 网易租赁服 / 联机大厅
+        - Xbox / PlayStation / Switch（国际版）
         - 其他
     validations:
       required: true

@@ -1,6 +1,18 @@
-# 1.21.130 纯指令速查
+# 网易 3.10 / BE1.21.130 纯指令速查
 
-面向命令方块。命令方块里 `/` 可写可不写；聊天栏必须写。下面统一带 `/`，粘贴到两边都能用。
+默认面向网易中国版 3.10 / BE1.21.130 的命令方块；国际版 1.21.130 作为兼容核对。命令方块里 `/` 可写可不写；聊天栏必须写。下面统一带 `/`，粘贴到两边都能用。
+
+## 网易命令门禁
+
+| 状态 | 命令 | 处理 |
+| --- | --- | --- |
+| 官方命令表明确可用 | `execute`、`scoreboard`、`tag`、`give`、`clear`、`replaceitem`、`title`、`structure`、`tickingarea`、`playanimation`、`camerashake` 等 | 可以按本页语法生成 |
+| 语料常见但官方表未稳定列出 | `titleraw`、`damage`、`hud` | 首次使用先 `/help`，实际执行成功后升级证据 |
+| 存在但不是纯命令方块独立能力 | `function`、`schedule`、`reload` | 需要 Add-on 函数或资源重载，默认排除 |
+| 网易未验证 | `camera`、`inputpermission`、`dialogue`、`loot`、`place`、`recipe`、`scriptevent` | 给替代方案，不把国际版文档当网易证据 |
+| 官方资料冲突或未验证 | `fog`、`hud` | 默认不用，先 `/help` 和目标客户端实测 |
+
+完整证据矩阵见 [netease-1.21.130.md](netease-1.21.130.md)。
 
 ## 通用语法
 
@@ -28,13 +40,13 @@
 | 经验 | `/xp <amount> [player]` 或 `/xp <amount>L [player]` | `L` 是等级 |
 | 杀死 | `/kill <target>` | |
 | 标签 | `/tag <target> <add\|remove\|list> [name]` | 用标签分组，替代队伍 |
-| 伤害 | `/damage <target> <amount> [cause] [entity]` | 1.19.80+ |
+| 伤害 | `/damage <target> <amount> [cause] [entity]` | 网易语料已出现；首次使用先 `/help damage` |
 | 召唤 | `/summon <entity> [x y z] [spawnEvent] [nameTag]` | **不能带 NBT** |
 | 重生点 | `/spawnpoint <player> [pos]` | |
 | 世界出生点 | `/setworldspawn [pos]` | |
 | 骑乘 | `/ride <riders> <ride>` | 让实体骑上去 |
-| 摄像机 | `/camera <player> <set\|clear\|fade\|...>` | 基岩专属 |
-| 输入限制 | `/inputpermission set <player> <camera\|movement> <enabled\|disabled>` | 基岩专属 |
+| 摄像机 | `/camera <player> <set\|clear\|fade\|...>` | 国际版语法；网易 1.21.130 未验证，默认用 `camerashake`/标题/传送朝向 |
+| 输入限制 | `/inputpermission set <player> <camera\|movement> <enabled\|disabled>` | 国际版语法；网易 1.21.130 未验证，默认不用 |
 
 `give`/`replaceitem` 的组件只支持四种：
 
@@ -246,12 +258,12 @@ minecraft:keep_on_death
 ## 其他有用命令
 
 ```text
-/loot give @s loot <loot_table>
 /ride @s <entity>
-/inputpermission set @s movement disabled
 ```
 
-`/loot` 的桌子名用游戏内补全；自定义战利品表需要行为包，纯指令只用原版表。
+- `/loot` 在网易 1.21.130 未验证；结构化的原版掉落用 `give`、`clear`、`replaceitem` 或结构模板。
+- `/place` 在网易 1.21.130 未验证；固定模板优先用 `structure load`。
+- `/hud` 先 `/help hud`。隐藏原版 HUD 时必须提供恢复路径。
 
 ## Java → 基岩版差异
 

@@ -2,6 +2,7 @@
   "schemaVersion": 2,
   "target": {
     "edition": "bedrock",
+    "channel": "netease-china",
     "version": "1.21.130",
     "commandsOnly": true
   },
@@ -169,6 +170,7 @@
     {
       "id": "same-score-pair-teleport",
       "file": "examples/same-score-pair-teleport.md",
+      "spec": "examples/same-score-pair-teleport.spec.json",
       "blockCount": 1,
       "objectives": ["pair_score"],
       "tags": ["teleport_eligible"],

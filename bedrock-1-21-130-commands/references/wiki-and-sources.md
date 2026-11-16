@@ -1,14 +1,15 @@
 # Wiki 与资料来源
 
-这些页面用于查证和扩展实现，不是纯命令方块方案的运行依赖。项目固定目标是国际版基岩 1.21.130；`stable` 页面会继续滚动到更新版本，因此“页面当前写着”不能单独证明某个语法或 ID 在 1.21.130 已经存在。
+这些页面用于查证和扩展实现，不是纯命令方块方案的运行依赖。项目默认目标是网易中国版 3.10 / BE1.21.130，国际版 1.21.130 是兼容核对层。官方页面、客户端 `/help` 和用户实机记录分别代表不同证据，滚动文档里“当前写着”不能单独证明某条命令在某个固定客户端已经存在。
 
 ## 选择顺序
 
-1. 目标 1.21.130 客户端的实测结果，注明平台、对象和完整方块上下文。
-2. 官方版本更新日志、Microsoft Learn 命令参考、Mojira 或 Minecraft Feedback 的缺陷状态。
-3. 维护中的 Bedrock Wiki 技术文章；与官方资料交叉核对后，再把命令重写成纯命令方块版本。
-4. Minecraft Wiki 用于版本历史、时序和术语交叉核对。
-5. 用户提供的教程、MC百科、旧 Fandom 页面和论坛回答只作为线索，不能直接成为正式语法。
+1. 网易 3.10 / BE1.21.130 目标客户端的 `/help` 和执行结果，注明设备、环境和完整方块上下文。
+2. 网易开发者官网的 3.10 版本说明、命令列表和常用命令页面。
+3. 国际版固定版本更新日志、Microsoft Learn、Mojira 或 Minecraft Feedback，用于兼容核对和状态确认。
+4. 维护中的 Bedrock Wiki 技术文章；与官方资料交叉核对后，再把机制重写成网易纯命令方块版本。
+5. Minecraft Wiki 用于版本历史、时序和术语交叉核对。
+6. 用户提供的网易地图、指令合集、MC百科、旧 Fandom 页面和论坛回答只作为线索，不能直接成为正式语法。
 
 有冲突时保留证据等级和目标版本，不要把社区文章、旧教程或搜索摘要升级成“官方已确认”。等级定义见 [channel-matrix.md](channel-matrix.md)。
 
@@ -16,6 +17,9 @@
 
 | 来源 | 等级 | 适合查什么 | 版本与许可提醒 |
 | --- | --- | --- | --- |
+| [网易开发者：3.10 版本更新](https://mc.163.com/dev/mcmanual/mc-dev/mcdocs/1-ModAPI/%E6%9B%B4%E6%96%B0%E4%BF%A1%E6%81%AF/3.10.html) | `official` | 网易版本线与 BE1.21.130 映射、稳定版和玩家包时间 | 版本说明不列全部命令；命令仍查独立命令页 |
+| [网易开发者：命令列表及概述](https://dev.mc.163.com/dev/mcmanual/mc-dev/mconline/10-addon%E6%95%99%E7%A8%8B/%E7%AC%AC04%E7%AB%A0%EF%BC%9A%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F%EF%BC%8C%E4%BD%A0%E7%9A%84%E5%88%9B%E4%BD%9C%E7%AE%A1%E5%AE%B6/%E8%AF%BE%E7%A8%8B04.%E5%91%BD%E4%BB%A4%E5%88%97%E8%A1%A8%E5%8F%8A%E6%A6%82%E8%BF%B0.html) | `official` | 网易可用命令基线；`fog` 状态需要和其他官方页面交叉核对 | 页面未必覆盖新命令和参数；参数以 `/help` 补全为准 |
+| [网易开发者：常用命令及用法](https://dev.mc.163.com/dev/mcmanual/mc-dev/mconline/15-%E7%8E%A9%E6%B3%95%E7%BB%84%E4%BB%B6%E6%95%99%E7%A8%8B/3-%E4%BA%86%E8%A7%A3%E6%88%91%E7%9A%84%E4%B8%96%E7%95%8C%E5%8E%9F%E7%89%88%E5%91%BD%E4%BB%A4/5-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E5%8F%8A%E7%94%A8%E6%B3%95.html) | `official` | 网易基岩常用命令的基础签名 | 教程可能同时给出旧数据值和新方块状态重载 |
 | [Microsoft Learn：命令方块](https://learn.microsoft.com/en-us/minecraft/creator/documents/commandblocks?view=minecraft-bedrock-stable) | `official` | 类型、条件、红石、延迟和基础命令方块链 | Stable 会滚动更新；本文示例也可能混用旧命令，以目标版本和实测为准 |
 | [Microsoft Learn：命令参考](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/commandsreference/examples/commandlist?view=minecraft-bedrock-stable) | `official` | 查命令是否出现在当前 Stable 文档 | 当前 Stable 可能晚于 1.21.130；新命令要另查首次版本 |
 | [Microsoft Learn：更多资料来源](https://learn.microsoft.com/en-us/minecraft/creator/documents/moreinfosources?view=minecraft-bedrock-stable) | `official` | 官方给出的社区 Wiki、样例仓库和协议边界 | 列链接表示推荐入口，不表示社区内容自动正确或匹配 1.21.130 |
@@ -27,6 +31,7 @@
 | [中文 Minecraft Wiki：转载须知](https://zh.minecraft.wiki/w/Minecraft_Wiki:%E8%BD%AC%E8%BD%BD%E9%A1%BB%E7%9F%A5?variant=zh-cn) | `license` | 中文 Wiki 的复制和署名条件 | 与当前项目许可不兼容，默认只链接 |
 | [Mojang/bedrock-samples](https://github.com/Mojang/bedrock-samples) | `official-sample` | `metadata/command_modules` 中的命令名和样例元数据 | `main` 是更新版本；必须查 Release、tag 或历史提交才能用于 1.21.130 |
 | [MC百科《基岩版入门指令解析教程》](https://www.mcmod.cn/post/3872.html) | `corpus-observed` | 网易渠道和 1.21.120 入门语料 | 作者明确标注未经允许禁止转载；只用作用户语料线索，不复制、不当通用基线 |
+| [yixin-amore/MinecraftBE-Command-Building-Skill](https://github.com/yixin-amore/MinecraftBE-Command-Building-Skill) | `community-skill` | 网易命令边界、命令建模、spec/linter、FMBE/MBE 和数据化 RPG 的设计线索 | MIT；只吸收经本项目重写和校验的方法。固定审计提交 `c3e5b0c53c70c3c80bd0e093b84e83da53fec522` |
 
 ## Bedrock Wiki 路由
 
@@ -53,10 +58,10 @@
 
 使用社区 Wiki 或滚动官方页面前，依次确认：
 
-1. 页面是否写明支持的基岩版本。
+1. 页面是否写明支持的网易版本或基岩底层版本。
 2. 若没有版本标记，搜索更新日志或源文件历史，确认功能在 1.21.130 已经出现。
 3. 用官方 changelog、Mojira 或 Microsoft 文档交叉核对命令名和限制。
-4. 将社区函数、行为包或脚本示例改写为命令方块链，报告新增 CB 和执行分叉。
+4. 将社区函数、行为包或脚本示例改写为网易命令方块链，报告新增 CB、执行分叉和 `/help` 门禁。
 5. 未在目标客户端执行时标为 `static-only`；不要用网页存在代替实机通过。
 
 Microsoft Learn 的 `?view=minecraft-bedrock-stable` 是当前 Stable 视图。需要固定 1.21.130 时，可查看 `MicrosoftDocs/minecraft-creator` 在该版本发布日期附近的提交与文件历史，同时以 1.21.130 更新日志和客户端测试为准。
@@ -69,4 +74,4 @@ Microsoft Learn 的 `?view=minecraft-bedrock-stable` 是当前 Stable 视图。�
 - `minecraft.net`、`bugs.mojang.com`、`feedback.minecraft.net` 的链接和片段属于来源材料；发布包只保留必要链接和原创改写。
 - 记录“来源 URL、核实日期、目标版本、证据等级、改写内容”。不要只留下一个无日期、无版本的复制命令。
 
-最近核对日期：2026-11-15。
+最近核对日期：2026-11-16。

@@ -1,0 +1,36 @@
+{
+  "name": "same-score-pair-teleport",
+  "description": "One pulse block teleports the nearby registered trigger player to the other registered online player when both scores match.",
+  "channel": "netease-china",
+  "targetVersion": "1.21.130",
+  "commandsOnly": true,
+  "setup": [
+    "scoreboard objectives add pair_score dummy",
+    "scoreboard players set A pair_score 1",
+    "scoreboard players set B pair_score 1",
+    "tag A add teleport_eligible",
+    "tag B add teleport_eligible"
+  ],
+  "blocks": [
+    {
+      "id": "B1",
+      "type": "impulse",
+      "condition": "unconditional",
+      "redstone": "needs_redstone",
+      "delay": 0,
+      "command": "execute as @a[tag=teleport_eligible,r=3,c=1] at @s at @a[tag=teleport_eligible,rm=0.1] if score @s pair_score = @p pair_score run tp @s @p",
+      "next": null,
+      "note": "Register only A and B. @p is a positional approximation for the button presser."
+    }
+  ],
+  "tests": [
+    "A and B online with equal scores: trigger player teleports to the other player.",
+    "Scores differ: no teleport.",
+    "One player offline: no teleport.",
+    "A third tagged player nearby: reject this configuration because ownership becomes ambiguous."
+  ],
+  "notes": [
+    "Replace A and B with the actual player names for the test setup.",
+    "Static-only until executed on the target NetEase client."
+  ]
+}

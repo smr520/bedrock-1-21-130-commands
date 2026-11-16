@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * 基岩版 1.21.130 纯指令静态检查
- * 用法: node validate-commands.mjs <文件.txt|文件.md> [--quiet]
+ * 用法: node validate-commands.mjs <文件.txt|文件.md> [--channel netease|international] [--quiet]
  */
 
 import fs from 'node:fs';
@@ -17,7 +17,8 @@ const COMMANDS = new Set([
   'reload', 'testfor', 'testforblock', 'testforblocks', 'say', 'me', 'list',
   'locate', 'spreadplayers', 'msg', 'tell', 'w', 'dialogue', 'event',
   'mobevent', 'music', 'fog', 'hud', 'camerashake', 'clearspawnpoint',
-  'setmaxplayers', 'querytarget', 'playanimation', 'stopsound'
+  'setmaxplayers', 'querytarget', 'playanimation', 'stopsound', 'recipe',
+  'scriptevent'
 ]);
 
 const JAVA_PARAMS = /\b(limit|sort|distance|nbt|team|predicate|advancement|bossbar|attribute|forceload|datapack|fillbiome)\s*=/i;
@@ -39,12 +40,18 @@ const ALLOWED_ITEM_COMPONENTS = new Set([
   'minecraft:keep_on_death', 'keep_on_death'
 ]);
 const OPERATORS = new Set(['=', '+=', '-=', '*=', '/=', '%=', '<', '>', '><']);
+const NETEASE_UNVERIFIED = new Set([
+  'camera', 'inputpermission', 'dialogue', 'loot', 'place', 'recipe',
+  'scriptevent', 'hud'
+]);
 
 const file = process.argv[2];
 const quiet = process.argv.includes('--quiet');
+const channelIndex = process.argv.indexOf('--channel');
+const channel = channelIndex >= 0 ? process.argv[channelIndex + 1] : 'netease';
 
-if (!file) {
-  console.error('用法: node validate-commands.mjs <文件.txt|文件.md> [--quiet]');
+if (!file || !['netease', 'international'].includes(channel)) {
+  console.error('用法: node validate-commands.mjs <文件.txt|文件.md> [--channel netease|international] [--quiet]');
   process.exit(2);
 }
 
@@ -442,6 +449,32 @@ function validateVolume(line, cmd) {
   }
 }
 
+function commandNames(cmd) {
+  const words = tokenize(cmd);
+  const names = [];
+  if (words[0]) names.push(words[0].toLowerCase());
+  if (words[0]?.toLowerCase() !== 'execute') return names;
+  for (let index = 0; index < words.length - 1; index++) {
+    if (words[index].toLowerCase() === 'run') names.push(words[index + 1].toLowerCase());
+  }
+  return names;
+}
+
+function validateNetEaseBoundary(line, cmd) {
+  if (channel !== 'netease') return;
+  for (const name of commandNames(cmd)) {
+    if (name === 'fog') {
+      warn(line, 'fog 的网易官方资料存在冲突；默认不用，先 /help fog 和目标客户端实测', cmd);
+    } else if (NETEASE_UNVERIFIED.has(name)) {
+      warn(
+        line,
+        `/${name} 在网易 1.21.130 默认未验证；先 /help ${name} 或在目标客户端实测，并记录证据等级`,
+        cmd
+      );
+    }
+  }
+}
+
 let commandCount = 0;
 let pendingBlockType = '';
 
@@ -469,6 +502,8 @@ lines.forEach((raw, i) => {
   }
 
   const first = cmd.split(/\s+/)[0].toLowerCase();
+
+  validateNetEaseBoundary(line, cmd);
 
   // 旧 execute
   if (/^execute\s+@/.test(cmd)) {
@@ -566,7 +601,7 @@ lines.forEach((raw, i) => {
     warn(line, '旧教程常用 scoreboard players test；纯命令方块建议改用 execute if score ... matches', found);
   }
   if (first === 'schedule') {
-    err(line, '纯命令方块版本不要 /schedule；用分数计时器、方块延迟或独立触发链', found);
+    err(line, '网易命令表有 /schedule，但它依赖 Add-on 函数；纯命令方块版用分数计时器、方块延迟或独立触发链', found);
   }
   if (first === 'reload') {
     err(line, '纯命令方块版本不要 /reload；修改方块内容后直接保存/重进验证', found);

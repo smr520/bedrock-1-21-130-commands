@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NetEase Bedrock Command-Block Chain Spec",
+  "description": "A declarative build plan for a pure command-block chain. This is not an mcfunction file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "blocks"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{1,63}$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "channel": {
+      "enum": ["netease-china", "international"],
+      "default": "netease-china"
+    },
+    "targetVersion": {
+      "type": "string",
+      "default": "1.21.130"
+    },
+    "commandsOnly": {
+      "type": "boolean",
+      "default": true
+    },
+    "setup": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/block"
+      }
+    }
+  },
+  "$defs": {
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "command"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,31}$"
+        },
+        "type": {
+          "enum": ["impulse", "repeat", "chain"]
+        },
+        "condition": {
+          "enum": ["unconditional", "conditional"],
+          "default": "unconditional"
+        },
+        "redstone": {
+          "enum": ["always_active", "needs_redstone"]
+        },
+        "delay": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "default": 0
+        },
+        "executeFirstTick": {
+          "type": "boolean"
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32500
+        },
+        "next": {
+          "type": ["string", "null"]
+        },
+        "pos": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "integer"
+          }
+        },
+        "facing": {
+          "enum": ["north", "south", "east", "west", "up", "down"]
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,44 +1,55 @@
 # Validation
 
-验证日期：2026-11-15。
+验证日期：2026-11-16。
 
 ## 环境
 
 | 项目 | 结果 |
 | --- | --- |
-| Node.js | 24.19.0，脚本仅使用标准库 |
-| Python | 3.12，扫描器仅使用标准库和可选解析器 |
+| Node.js | 24.19.0，校验脚本仅使用标准库 |
+| Python | 3.12；扫描器仅使用标准库和可选解析器，`quick_validate.py` 使用 PyYAML 6.0.3 |
 | Minecraft 客户端 | 当前环境未安装 |
-| 目标 | Minecraft Bedrock 1.21.130 |
-| 跨版本核对 | 已核对 1.21.120 与 1.21.130 更新日志；相关命令语法未恢复多目标比较 |
-| Wiki 来源核对 | 2026-11-15 在线核对 Microsoft Learn、官方来源页、Bedrock Wiki、Minecraft Wiki、Mojira 和 MC百科的用途及许可边界 |
+| 默认目标 | 网易中国版 V3.10 / BE1.21.130，纯命令方块 |
+| 兼容目标 | 国际版 Minecraft Bedrock 1.21.130 |
+| 网易来源核对 | 2026-11-16 在线核对网易 3.10 更新页、官方命令列表和常用命令页 |
+| Wiki 来源核对 | 2026-11-16 核对 Microsoft Learn、官方来源页、Bedrock Wiki、Minecraft Wiki、Mojira、MC百科和审计提交 `c3e5b0c53c70c3c80bd0e093b84e83da53fec522` 的用途及许可边界 |
 
 ## 自动检查
 
 | 检查 | 结果 |
 | --- | --- |
 | skill-creator `quick_validate.py` | 通过；frontmatter、名称和未完成脚手架检查 |
-| `node scripts/validate-skill.mjs` | 通过；19 份运行时文档、21 份 Markdown 内部链接、入口路由、Wiki 关键来源、命令语法、链结构、配方注册表和 CB 声明一致 |
-| `node scripts/selftest.mjs` | 通过；校验器正向、负向、严格模式、动作型与纯条件型 `execute`、单目标分数比较、传送目的地和配方复用 |
+| `node scripts/validate-skill.mjs` | 通过；21 份运行时文档、25 份 Markdown 内部链接、入口路由、网易与 Wiki 关键来源、命令语法、链结构、JSON schema、链 spec、配方注册表和 CB 声明一致 |
+| `node scripts/selftest.mjs` | 通过；校验器正向、负向、严格模式、动作型与纯条件型 `execute`、网易未验证警告、链 spec、单目标分数比较、传送目的地和配方复用 |
+| `node scripts/validate-chain-spec.mjs` | 通过；同分互传 spec 无错误，可生成 Markdown 构建表 |
+| `validate-commands.mjs --channel netease` | 通过；未验证命令给警告，纯命令方块中的函数/调度依赖仍被拦截 |
 | `python -B -X utf8 scripts/scan-corpora.py --self-test` | 通过；去重、嵌套 ZIP、DOCX、7z 降级和不可解析文件盘点 |
-| Node.js `--check` | 所有 `.mjs` 脚本通过语法检查 |
+| Node.js `--check` | 6 个 `.mjs` 脚本全部通过语法检查 |
+| JSON / YAML 解析 | skill 内全部 JSON、发布仓库内 5 个 GitHub YAML 全部通过解析 |
 | UTF-8 完整性 | 所有发布文本不含 `U+FFFD`；校验器新增负向回归用例 |
 | 敏感信息扫描 | 未发现密钥、令牌、邮箱、手机号、个人绝对路径或口令 |
-| 二进制文件检查 | skill 目录全部为 UTF-8 文本，不包含二进制资产 |
-| 安装目录哈希比对 | 通过；源目录、发布目录和已安装 skill 的 31 个文件逐文件 SHA-256 一致 |
-| ZIP 完整性 | 通过；38 个文件与发布目录逐文件 SHA-256 一致，没有越界路径 |
+| 二进制文件检查 | skill 目录 38 个文件全部为 UTF-8 文本，不包含二进制资产或 NUL 字节 |
+| 安装目录哈希比对 | 通过；源目录、发布目录和已安装 skill 的 38 个文件逐文件 SHA-256 一致 |
+| ZIP 完整性 | 通过；`v2.0.0` ZIP 共 38 个文件、134,860 bytes，逐文件 SHA-256 与发布目录一致，没有越界路径 |
+
+ZIP SHA-256：
+
+```text
+ba9f09eb45c0579e16297c20ec9221ff7e220072ec5384d695f5ffe2d642fc8e
+```
 
 GitHub Actions 在每次推送到 `main` 和每个拉取请求中执行脚本语法检查、整包校验、回归测试、语料扫描器自测和配方规划。
 
 ## 预算检查
 
-选择 `server-starter-core` 和 `player-hud`：
+选择 `server-starter-core`、`player-hud` 和 `hud-arbiter`：
 
 ```text
-名义方块总数: 14
-复用后总数: 13
+名义方块总数: 17
+复用后总数: 16
 复用减少: 1
 共享模块: display-bus
+风险: 多个动作栏输出需要仲裁
 ```
 
 选择 `hud-arbiter` 时，应删除被它接管的独立动作栏输出；仲裁格和原显示格不能机械相加。
@@ -67,6 +78,7 @@ A 与 B 在线且同分: 1 个实例，传送到另一名玩家
 
 以下项目必须在目标 1.21.130 客户端完成，当前发布版不声称通过：
 
+- 网易中国版 3.10 / BE1.21.130 的 `/help` 补全：`titleraw`、`damage`、`hud`、`fog` 和其他未验证命令。
 - 双人同时使用同一按钮、菜单落点和撤离区。
 - 同分双人互传中的双方挤近、单方离线、不同分数、死亡/旁观和跨维度行为。
 - 世界保持运行时，每名玩家断开再进只欢迎一次、两人同 tick 进入，以及大量离线分数记录下的 `reset *` 开销。
@@ -74,8 +86,11 @@ A 与 B 在线且同分: 1 个实例，传送到另一名玩家
 - 一人离开时人数差能发现净减少；同一 tick 一人进入、一人离开时应明确记录净差为 0 的漏报边界。
 - 空背包、满背包、重复按键和交易中途失败。
 - 方块链所在区块卸载、常加载区设置和世界重进。
-- `titleraw actionbar` 多字段显示、缺失分数行为和动作栏仲裁视觉效果。
+- 网易 `titleraw actionbar` 多字段显示、缺失分数行为和动作栏仲裁视觉效果。
 - 键盘鼠标、手柄和触屏的抬头、低头及菜单操作。
+- FMBE/MBE 实体数量、动画变量、客户端视觉、碰撞遮挡和 1 Hz 刷新。
+- 数据化 RPG 的真实受击探针、中文 objective、`haspermission`、`has_property`、`@n` 和网易专用 ID。
+- 两个不同网易客户端设备上的同 tick、帧率和动作栏刷新差异。
 - 大量玩家、实体或每刻选择器下的性能。
 
 验收项目见 `bedrock-1-21-130-commands/references/test-matrix.md`。

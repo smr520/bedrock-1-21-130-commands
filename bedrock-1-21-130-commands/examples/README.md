@@ -13,6 +13,7 @@
 | `player-hud.md` | 1 格玩家状态动作栏，直接读取多个分数 |
 | `hud-arbiter.md` | 3 格 HUD 仲裁层：菜单优先于撤离，撤离优先于普通状态；不含被接入系统的状态与动作块 |
 | `same-score-pair-teleport.md` | 1 格同分双人互传：双重遍历比较单个目标，同一按钮按触发者传送 |
+| `same-score-pair-teleport.spec.json` | 同分互传的机器可读链 spec，可检查拓扑并生成构建表 |
 
 更多模板在 `../references/systems.md`：
 
@@ -33,6 +34,12 @@
 同时安装普通 HUD、撤离进度和菜单时，优先把三处动作栏替换为 `hud-arbiter.md`。多系统组合时先读 `../references/shared-core.md`，复用首次进入、HUD、冷却和交易锁；依赖与预算登记在 `../references/recipe-registry.json`。
 
 在 skill 根目录运行 `node scripts/plan-recipes.mjs <配方ID...>` 可预检组合预算与冲突。
+
+结构化示例可用以下命令检查并生成构建表：
+
+```powershell
+node scripts\validate-chain-spec.mjs examples\same-score-pair-teleport.spec.json --write same-score-plan.md
+```
 
 压缩方法和取舍见 `../references/block-budget.md`。
 

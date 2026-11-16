@@ -14,6 +14,7 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const root = path.dirname(scriptDir);
 const commandValidator = path.join(scriptDir, 'validate-commands.mjs');
 const chainValidator = path.join(scriptDir, 'validate-chains.mjs');
+const chainSpecValidator = path.join(scriptDir, 'validate-chain-spec.mjs');
 const errors = [];
 
 const OPEN = '\u3010';
@@ -50,8 +51,10 @@ function safeRuntimeFiles() {
     'SKILL.md',
     'references/block-budget.md',
     'references/channel-matrix.md',
+    'references/command-model.md',
     'references/command-blocks.md',
     'references/commands.md',
+    'references/netease-1.21.130.md',
     'references/selectors-and-scoreboard.md',
     'references/shared-core.md',
     'references/system-ideas.md',
@@ -98,7 +101,7 @@ function countNotationBlocks(relativePath) {
 
 function runCommandValidator(relativePath) {
   const absolutePath = path.join(root, relativePath);
-  const result = spawnSync(process.execPath, [commandValidator, absolutePath, '--quiet'], {
+  const result = spawnSync(process.execPath, [commandValidator, absolutePath, '--channel', 'netease', '--quiet'], {
     encoding: 'utf8'
   });
 
@@ -136,8 +139,12 @@ function validateRegistry() {
   }
 
   if (registry.schemaVersion !== 2) fail(registryPath, 0, 'schemaVersion 必须为 2');
-  if (registry.target?.edition !== 'bedrock' || registry.target?.version !== '1.21.130') {
-    fail(registryPath, 0, 'target 必须为 bedrock 1.21.130');
+  if (
+    registry.target?.edition !== 'bedrock' ||
+    registry.target?.channel !== 'netease-china' ||
+    registry.target?.version !== '1.21.130'
+  ) {
+    fail(registryPath, 0, 'target 必须为网易 netease-china / bedrock 1.21.130');
   }
   if (registry.target?.commandsOnly !== true) fail(registryPath, 0, 'commandsOnly 必须为 true');
 
@@ -167,6 +174,9 @@ function validateRegistry() {
       const document = entry.file || entry.document;
       if (!document || !fs.existsSync(path.join(root, document))) {
         fail(registryPath, 0, `${entry.id} 引用了不存在的文件: ${document || '(空)'}`);
+      }
+      if (entry.spec && !fs.existsSync(path.join(root, entry.spec))) {
+        fail(registryPath, 0, `${entry.id} 引用了不存在的 spec: ${entry.spec}`);
       }
       if (!['static-only', 'tested'].includes(entry.status)) {
         fail(registryPath, 0, `${entry.id} 的 status 必须是 static-only 或 tested`);
@@ -232,6 +242,45 @@ function validateRegistry() {
   }
 }
 
+function validateChainSpecs() {
+  const examplesDirectory = path.join(root, 'examples');
+  const specs = fs
+    .readdirSync(examplesDirectory)
+    .filter(name => name.endsWith('.spec.json'))
+    .map(name => path.join(examplesDirectory, name));
+
+  for (const spec of specs) {
+    const result = spawnSync(process.execPath, [chainSpecValidator, spec, '--quiet'], {
+      encoding: 'utf8'
+    });
+    if (result.status !== 0) {
+      fail(path.relative(root, spec), 0, '未通过 validate-chain-spec.mjs');
+      if (!quiet) {
+        if (result.stdout?.trim()) process.stderr.write(result.stdout);
+        if (result.stderr?.trim()) process.stderr.write(result.stderr);
+      }
+    }
+  }
+}
+
+function validateChainSpecSchema() {
+  const relativePath = 'assets/chain-spec.schema.json';
+  let schema;
+  try {
+    schema = JSON.parse(read(relativePath));
+  } catch (error) {
+    fail(relativePath, 0, `JSON 解析失败: ${error.message}`);
+    return;
+  }
+  if (schema.type !== 'object') fail(relativePath, 0, 'schema.type 必须是 object');
+  if (!schema.properties?.blocks || !schema.$defs?.block) {
+    fail(relativePath, 0, 'schema 缺少 blocks 或 block 定义');
+  }
+  if (!schema.properties?.channel?.enum?.includes('netease-china')) {
+    fail(relativePath, 0, 'schema 必须声明 netease-china 渠道');
+  }
+}
+
 function validateMarkdownLinks(relativePath) {
   const text = read(relativePath);
   const linkRe = /\[[^\]]+\]\(([^)]+)\)/g;
@@ -264,6 +313,9 @@ function validateWikiSourceGuide() {
   const relativePath = 'references/wiki-and-sources.md';
   const text = read(relativePath);
   const required = [
+    'https://mc.163.com/dev/mcmanual/mc-dev/mcdocs/1-ModAPI/%E6%9B%B4%E6%96%B0%E4%BF%A1%E6%81%AF/3.10.html',
+    'https://github.com/yixin-amore/MinecraftBE-Command-Building-Skill',
+    'c3e5b0c53c70c3c80bd0e093b84e83da53fec522',
     'https://learn.microsoft.com/en-us/minecraft/creator/documents/moreinfosources?view=minecraft-bedrock-stable',
     'https://wiki.bedrock.dev/llms.txt',
     'https://minecraft.wiki/w/Commands',
@@ -333,6 +385,8 @@ validateFrontmatter();
 for (const file of safeRuntimeFiles()) runCommandValidator(file);
 runChainValidator();
 validateRegistry();
+validateChainSpecs();
+validateChainSpecSchema();
 validateReferenceRouting();
 validateWikiSourceGuide();
 for (const file of markdownFiles()) {
@@ -344,6 +398,7 @@ if (!quiet) {
   console.log(`Skill: ${root}`);
   console.log(`运行时文档已校验: ${safeRuntimeFiles().length}`);
   console.log(`Markdown 内部链接已校验: ${markdownFiles().length}`);
+  console.log('结构化链 spec 已校验: examples/*.spec.json');
   console.log('说明: legacy-to-modern.md 故意包含错误旧语法，不按可直接运行文件整体校验。');
 }
 

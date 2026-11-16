@@ -206,6 +206,89 @@ try {
   expectStatus(legacyReplaceResult, 0, '旧 replaceitem 重载仍可作为兼容输入');
   assert.match(legacyReplaceResult.stdout, /destroy 或 keep/);
 
+  const neteaseUnverified = writeFixture(
+    'netease-unverified.txt',
+    '/camera @a set default\n'
+  );
+  const neteaseUnverifiedResult = run('validate-commands.mjs', [neteaseUnverified]);
+  expectStatus(neteaseUnverifiedResult, 0, '网易未验证命令应警告但允许人工确认后使用');
+  assert.match(neteaseUnverifiedResult.stdout, /网易 1\.21\.130 默认未验证/);
+
+  const neteaseFog = writeFixture(
+    'netease-fog.txt',
+    '/fog @a push minecraft:fog_default\n'
+  );
+  const neteaseFogResult = run('validate-commands.mjs', [neteaseFog]);
+  expectStatus(neteaseFogResult, 0, '网易证据冲突的 fog 应警告但不硬判不存在');
+  assert.match(neteaseFogResult.stdout, /官方资料存在冲突/);
+
+  expectStatus(
+    run('validate-commands.mjs', [neteaseUnverified, '--channel', 'international', '--quiet']),
+    0,
+    '国际版模式不应套用网易未验证警告'
+  );
+
+  const tellrawWithCommandWords = writeFixture(
+    'tellraw-command-words.txt',
+    '/tellraw @a {"rawtext":[{"text":"run camera"}]}\n'
+  );
+  const tellrawWordsResult = run('validate-commands.mjs', [tellrawWithCommandWords]);
+  expectStatus(tellrawWordsResult, 0, '文本里的 run camera 不应误判成嵌套命令');
+  assert.doesNotMatch(tellrawWordsResult.stdout, /网易 1\.21\.130 默认未验证/);
+
+  const validSpec = writeFixture(
+    'valid-spec.json',
+    JSON.stringify({
+      name: 'valid-spec',
+      channel: 'netease-china',
+      targetVersion: '1.21.130',
+      commandsOnly: true,
+      setup: ['scoreboard objectives add timer dummy'],
+      blocks: [
+        {
+          id: 'B1',
+          type: 'repeat',
+          condition: 'unconditional',
+          redstone: 'always_active',
+          delay: 0,
+          command: 'scoreboard players add .tick timer 1',
+          next: null
+        }
+      ],
+      tests: ['activate the chain and verify the score increments']
+    })
+  );
+  const validSpecPlan = path.join(tempDir, 'valid-spec-plan.md');
+  expectStatus(
+    run('validate-chain-spec.mjs', [validSpec, '--write', validSpecPlan, '--quiet']),
+    0,
+    '有效 spec 应通过'
+  );
+  assert.ok(fs.existsSync(validSpecPlan));
+
+  const invalidSpec = writeFixture(
+    'invalid-spec.json',
+    JSON.stringify({
+      name: 'invalid-spec',
+      channel: 'netease-china',
+      targetVersion: '1.21.130',
+      commandsOnly: true,
+      blocks: [
+        {
+          id: 'B1',
+          type: 'chain',
+          command: 'say no head',
+          next: null
+        }
+      ]
+    })
+  );
+  expectStatus(
+    run('validate-chain-spec.mjs', [invalidSpec, '--quiet']),
+    1,
+    '没有链头的 chain spec 应失败'
+  );
+
   const planner = run('plan-recipes.mjs', ['server-starter-core', 'player-hud', '--json']);
   expectStatus(planner, 0, '配方计划器应通过');
   const plan = JSON.parse(planner.stdout);
@@ -217,7 +300,7 @@ try {
   const unknownRecipe = run('plan-recipes.mjs', ['not-a-recipe', '--json']);
   expectStatus(unknownRecipe, 1, '未知配方应失败');
 
-  console.log('通过: 校验器正向、负向、严格模式、命令语法、单目标分数比较、传送目的地和配方复用测试。');
+  console.log('通过: 校验器正向、负向、严格模式、命令语法、spec、单目标分数比较、传送目的地和配方复用测试。');
 } catch (error) {
   console.error(`✖ selftest: ${error.message}`);
   process.exitCode = 1;

@@ -1,10 +1,12 @@
-# 1.21.130 版本要点
+# 网易 3.10 / BE1.21.130 与兼容要点
 
 ## 版本信息
 
 | 项目 | 内容 |
 | --- | --- |
-| 基岩版版本 | **1.21.130** |
+| 默认渠道 | **网易中国版 3.10 / BE1.21.130** |
+| 网易稳定版 | 2026-10-28 上线；2026-10-30 起玩家包体逐步更新 |
+| 基岩底层版本 | **1.21.130** |
 | 更新名 | Mounts of Mayhem |
 | 发布日期 | 2025-12-09 |
 | 对应 Java 版 | 1.21.11 |
@@ -12,8 +14,9 @@
 
 说明：
 
-- 国际版此后进入 26.x 版本线，但本技能固定 1.21.130，方便兼容仍停在该版本的设备。
-- 网易版（中国版）版本线是 3.10.x，使用自己的组件体系；命令大体相通，但新 ID 和新语法不一定同步。给网易版写之前先确认客户端版本。
+- 国际版此后进入 26.x 版本线；国际版 1.21.130 是本技能的兼容基线。
+- 网易中国版用 3.10.x 启动器和组件体系映射 BE1.21.130。命令大体相通，但命令表、新 ID、客户端补全和实机行为不一定与国际版完全同步。
+- 本页的“新增实体/物品/效果”来自国际版 1.21.130 更新。网易首次使用任一 ID 前，仍要在 3.10 / BE1.21.130 客户端补全、召唤、给予或施加成功。
 
 ## 新增实体 ID
 
@@ -26,7 +29,7 @@
 
 `zombie_horse` 是旧 ID，但 1.21.130 开始在平原和热带草原夜间自然生成，可能带有持铁长矛的僵尸骑手。
 
-测试：
+国际版 ID 测试；网易主档必须逐项确认：
 
 ```text
 /summon nautilus ~ ~ ~
@@ -68,7 +71,7 @@ netherite_nautilus_armor
 netherite_horse_armor
 ```
 
-测试：
+国际版 ID 测试；网易主档必须逐项确认：
 
 ```text
 /give @s wooden_spear
@@ -80,6 +83,7 @@ netherite_horse_armor
 
 注意：
 
+- 以上 ID 是国际版 1.21.130 的版本事实，不能仅凭本节证明网易 3.10 全部同步。
 - `give` 不能带 Java NBT。需要附魔就先用 `/enchant`：
 
 ```text
@@ -98,7 +102,7 @@ netherite_horse_armor
 | 状态效果 | `breath_of_the_nautilus` | `/effect @s breath_of_the_nautilus 30 0 true` |
 | 附魔 | `lunge` | `/enchant @s lunge 1` |
 
-`lunge` 是长矛专用附魔；用 `/enchant` 时物品必须是长矛。
+`lunge` 是长矛专用附魔；用 `/enchant` 时物品必须是长矛。网易客户端若不认识该附魔，改回通用附魔并记录渠道差异。
 
 ## 命令变化
 
@@ -114,10 +118,10 @@ netherite_horse_armor
 - 其余命令语法与 1.21.120 一致；`execute` 仍是 1.19.50 之后的新语法。
 - 自 1.19.60 起，`execute if|unless score` 不再接受可能匹配多个实体的 `@a`、`@e` 选择器。1.21.120 和 1.21.130 都没有恢复旧行为。
 
-## 对纯指令的影响
+## 对网易纯指令的影响
 
 - 不需要 `manifest.json`、`tick.json`、`min_engine_version`；这些是行为包的东西。
-- 新 ID 可以直接在 `/summon`、`/give`、`/effect`、`/enchant` 里用，不需要命名空间。
+- 国际版确认的新 ID 可在国际版命令里直接使用；网易仍以客户端补全和实际执行结果为准。
 - 旧版本客户端不认识新 ID；给旧版本写系统时不要用这些。
 - 用 `hasitem` 检测新物品：
 
@@ -145,6 +149,8 @@ netherite_horse_armor
 - [Target Selectors](https://learn.microsoft.com/en-us/minecraft/creator/documents/targetselectors?view=minecraft-bedrock-stable)。
 - [titleraw Command](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/commandsreference/examples/commands/titleraw?view=minecraft-bedrock-stable)。
 
-链接核实日期：2026-11-15。官方文档会继续更新；如果文档页面与固定目标客户端表现冲突，以目标客户端测试结果为准，并记录客户端版本。
+链接核实日期：2026-11-16。官方文档会继续更新；如果文档页面与固定目标客户端表现冲突，以目标客户端测试结果为准，并记录客户端版本。
+
+网易渠道的完整命令边界和 `/help` 门禁见 [netease-1.21.130.md](netease-1.21.130.md)。
 
 Wiki、社区文档、官方问题跟踪器和用户语料的可信度与许可不同，选择顺序见 [wiki-and-sources.md](wiki-and-sources.md)。

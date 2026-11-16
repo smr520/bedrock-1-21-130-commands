@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Commands, chains and skill package
+    name: NetEase commands, chains, specs and skill package
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
