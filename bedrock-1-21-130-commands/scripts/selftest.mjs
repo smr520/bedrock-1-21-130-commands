@@ -222,6 +222,14 @@ try {
   expectStatus(neteaseFogResult, 0, '网易证据冲突的 fog 应警告但不硬判不存在');
   assert.match(neteaseFogResult.stdout, /官方资料存在冲突/);
 
+  const neteaseTitleraw = writeFixture(
+    'netease-titleraw.txt',
+    '/titleraw @a actionbar {"rawtext":[{"text":"测试"}]}\n'
+  );
+  const neteaseTitlerawResult = run('validate-commands.mjs', [neteaseTitleraw]);
+  expectStatus(neteaseTitlerawResult, 0, '网易 titleraw 应警告但允许人工确认后使用');
+  assert.match(neteaseTitlerawResult.stdout, /网易 1\.21\.130 默认未验证/);
+
   expectStatus(
     run('validate-commands.mjs', [neteaseUnverified, '--channel', 'international', '--quiet']),
     0,
@@ -235,6 +243,39 @@ try {
   const tellrawWordsResult = run('validate-commands.mjs', [tellrawWithCommandWords]);
   expectStatus(tellrawWordsResult, 0, '文本里的 run camera 不应误判成嵌套命令');
   assert.doesNotMatch(tellrawWordsResult.stdout, /网易 1\.21\.130 默认未验证/);
+
+  const conditionalRawtext = writeFixture(
+    'conditional-rawtext.txt',
+    `/tellraw @a ${JSON.stringify({
+      rawtext: [
+        { text: '任务：' },
+        {
+          translate: '%%2',
+          with: {
+            rawtext: [
+              { selector: '@s[scores={quest=1}]' },
+              { text: '已领取' }
+            ]
+          }
+        }
+      ]
+    })}\n`
+  );
+  expectStatus(
+    run('validate-commands.mjs', [conditionalRawtext, '--quiet']),
+    0,
+    '参数数量完整的 translate %%2 条件文本应通过'
+  );
+
+  const invalidConditionalRawtext = writeFixture(
+    'invalid-conditional-rawtext.txt',
+    `/tellraw @a ${JSON.stringify({
+      rawtext: [{ translate: '%%2', with: { rawtext: [{ text: '只有一个参数' }] } }]
+    })}\n`
+  );
+  const invalidConditionalRawtextResult = run('validate-commands.mjs', [invalidConditionalRawtext]);
+  expectStatus(invalidConditionalRawtextResult, 1, 'translate %%2 参数不足时应失败');
+  assert.match(invalidConditionalRawtextResult.stdout, /translate %%2 需要至少 2 个 with 参数/);
 
   const validSpec = writeFixture(
     'valid-spec.json',
@@ -300,7 +341,7 @@ try {
   const unknownRecipe = run('plan-recipes.mjs', ['not-a-recipe', '--json']);
   expectStatus(unknownRecipe, 1, '未知配方应失败');
 
-  console.log('通过: 校验器正向、负向、严格模式、命令语法、spec、单目标分数比较、传送目的地和配方复用测试。');
+  console.log('通过: 校验器正向、负向、严格模式、命令语法、rawtext 参数槽、spec、单目标分数比较、传送目的地和配方复用测试。');
 } catch (error) {
   console.error(`✖ selftest: ${error.message}`);
   process.exitCode = 1;

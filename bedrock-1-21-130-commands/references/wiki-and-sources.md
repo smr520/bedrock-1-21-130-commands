@@ -22,6 +22,7 @@
 | [网易开发者：常用命令及用法](https://dev.mc.163.com/dev/mcmanual/mc-dev/mconline/15-%E7%8E%A9%E6%B3%95%E7%BB%84%E4%BB%B6%E6%95%99%E7%A8%8B/3-%E4%BA%86%E8%A7%A3%E6%88%91%E7%9A%84%E4%B8%96%E7%95%8C%E5%8E%9F%E7%89%88%E5%91%BD%E4%BB%A4/5-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E5%8F%8A%E7%94%A8%E6%B3%95.html) | `official` | 网易基岩常用命令的基础签名 | 教程可能同时给出旧数据值和新方块状态重载 |
 | [Microsoft Learn：命令方块](https://learn.microsoft.com/en-us/minecraft/creator/documents/commandblocks?view=minecraft-bedrock-stable) | `official` | 类型、条件、红石、延迟和基础命令方块链 | Stable 会滚动更新；本文示例也可能混用旧命令，以目标版本和实测为准 |
 | [Microsoft Learn：命令参考](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/commandsreference/examples/commandlist?view=minecraft-bedrock-stable) | `official` | 查命令是否出现在当前 Stable 文档 | 当前 Stable 可能晚于 1.21.130；新命令要另查首次版本 |
+| [Microsoft Learn：Raw Message JSON](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/rawmessagejson?view=minecraft-bedrock-stable) | `official` | `text`、`translate`、`with`、`selector`、`score` 和 `%%n` 参数槽的原始文本语义 | Stable 会滚动更新；用 `%%2` 做条件显示仍要在网易目标客户端验证 |
 | [Microsoft Learn：更多资料来源](https://learn.microsoft.com/en-us/minecraft/creator/documents/moreinfosources?view=minecraft-bedrock-stable) | `official` | 官方给出的社区 Wiki、样例仓库和协议边界 | 列链接表示推荐入口，不表示社区内容自动正确或匹配 1.21.130 |
 | [MicrosoftDocs/minecraft-creator](https://github.com/MicrosoftDocs/minecraft-creator) | `official-source` | 查看 Learn 页面源文件、提交历史和某个时间点的内容 | 文档为 CC BY 4.0，代码为 MIT；引用时仍需标出来源和修改 |
 | [Minecraft 1.21.130 Changelog](https://www.minecraft.net/en-us/article/minecraft-1-21-130-bedrock-changelog) | `official` | 固定版本的更新、修复和新增 ID | 版本事实优先于之后更新的滚动文档 |
@@ -31,7 +32,9 @@
 | [中文 Minecraft Wiki：转载须知](https://zh.minecraft.wiki/w/Minecraft_Wiki:%E8%BD%AC%E8%BD%BD%E9%A1%BB%E7%9F%A5?variant=zh-cn) | `license` | 中文 Wiki 的复制和署名条件 | 与当前项目许可不兼容，默认只链接 |
 | [Mojang/bedrock-samples](https://github.com/Mojang/bedrock-samples) | `official-sample` | `metadata/command_modules` 中的命令名和样例元数据 | `main` 是更新版本；必须查 Release、tag 或历史提交才能用于 1.21.130 |
 | [MC百科《基岩版入门指令解析教程》](https://www.mcmod.cn/post/3872.html) | `corpus-observed` | 网易渠道和 1.21.120 入门语料 | 作者明确标注未经允许禁止转载；只用作用户语料线索，不复制、不当通用基线 |
-| [yixin-amore/MinecraftBE-Command-Building-Skill](https://github.com/yixin-amore/MinecraftBE-Command-Building-Skill) | `community-skill` | 网易命令边界、命令建模、spec/linter、FMBE/MBE 和数据化 RPG 的设计线索 | MIT；只吸收经本项目重写和校验的方法。固定审计提交 `c3e5b0c53c70c3c80bd0e093b84e83da53fec522` |
+| [yixin-amore/MinecraftBE-Command-Building-Skill](https://github.com/yixin-amore/MinecraftBE-Command-Building-Skill) | `community-skill` | 网易命令边界、命令建模、spec/linter、FMBE/MBE、数据化 RPG 和原始文本 UI 的设计线索 | MIT；只吸收经本项目重写和校验的方法。审计提交 `9184e4d36c4df62a8fc4e2be951bd9163dd8196a`；该次建筑栈不并入纯命令方块默认流程 |
+
+该仓库 2026-11-18 的更新还加入了建筑编译器和一份 `command-syntax.json`。建筑编译器不进入本项目默认流程；命令表缺少可直接追溯的目标客户端证据，且该仓库自身仍把 `fog` 标为未实装，因此不能覆盖本项目的网易官方证据矩阵。
 
 ## Bedrock Wiki 路由
 
@@ -74,4 +77,4 @@ Microsoft Learn 的 `?view=minecraft-bedrock-stable` 是当前 Stable 视图。�
 - `minecraft.net`、`bugs.mojang.com`、`feedback.minecraft.net` 的链接和片段属于来源材料；发布包只保留必要链接和原创改写。
 - 记录“来源 URL、核实日期、目标版本、证据等级、改写内容”。不要只留下一个无日期、无版本的复制命令。
 
-最近核对日期：2026-11-16。
+最近核对日期：2026-11-19。

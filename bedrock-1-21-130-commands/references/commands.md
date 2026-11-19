@@ -214,6 +214,8 @@ minecraft:keep_on_death
 
 - `\n` 可换行：`{"rawtext":[{"text":"第一行\n第二行"}]}`。
 - 颜色用 `§`，例如 `§a`、`§c`、`§l`。
+- `translate:"%%2"` 会读取 `with.rawtext` 剩下的第二个参数。选择器没命中时，该参数会被跳过，后面的文本向前补位，因此常写成 `[选择器, 命中文字]`；选择器命中时显示文字，不命中时整个条件块不显示。参数槽从 `%%1` 开始，没有参数的槽不显示。
+- `%%n` 使用目标客户端的原始文本解析器。`ticks` 等普通状态仍要另写；它只压缩“同一显示槽里按条件选文字”的显示分叉。网易先用 `tellraw` 验证，`titleraw` 先执行 `/help titleraw`。完整模板见 [conditional-rawtext.md](../examples/conditional-rawtext.md)。
 - 基岩版 `particle` 没有 Java 的 `count dx dy dz speed` 参数。
 - 粒子 ID 用游戏内补全确认；常用 `minecraft:basic_flame_particle`、`minecraft:large_explosion`。
 

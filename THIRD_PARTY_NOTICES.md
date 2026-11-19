@@ -11,7 +11,7 @@ The Apache-2.0 license applies only to material that the project contributors ha
 The declarative chain-spec workflow and several command-system review ideas were independently adapted with reference to:
 
 - Project: <https://github.com/yixin-amore/MinecraftBE-Command-Building-Skill>
-- Audited commit: `c3e5b0c53c70c3c80bd0e093b84e83da53fec522`
+- Audited commit: `9184e4d36c4df62a8fc4e2be951bd9163dd8196a`
 - Copyright: 2026 yixin-amore
 - License: MIT
 

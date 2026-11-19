@@ -42,7 +42,7 @@ const ALLOWED_ITEM_COMPONENTS = new Set([
 const OPERATORS = new Set(['=', '+=', '-=', '*=', '/=', '%=', '<', '>', '><']);
 const NETEASE_UNVERIFIED = new Set([
   'camera', 'inputpermission', 'dialogue', 'loot', 'place', 'recipe',
-  'scriptevent', 'hud'
+  'scriptevent', 'titleraw', 'damage', 'hud'
 ]);
 
 const file = process.argv[2];
@@ -218,7 +218,37 @@ function validateRawtext(line, cmd) {
     const obj = JSON.parse(json);
     if (!obj || !Array.isArray(obj.rawtext)) {
       err(line, 'tellraw/titleraw 必须是 {"rawtext":[...]} 结构', cmd);
+      return;
     }
+    const visit = (node) => {
+      if (Array.isArray(node)) {
+        for (const item of node) visit(item);
+        return;
+      }
+      if (!node || typeof node !== 'object') return;
+
+      if (typeof node.translate === 'string') {
+        const slot = node.translate.match(/^%%(\d+)$/);
+        if (slot) {
+          const index = Number(slot[1]);
+          const args = Array.isArray(node.with)
+            ? node.with
+            : Array.isArray(node.with?.rawtext)
+              ? node.with.rawtext
+              : null;
+          if (index < 1) {
+            err(line, `translate %%${index} 的槽位必须从 %%1 开始`, cmd);
+          } else if (!args) {
+            err(line, `translate %%${index} 缺少 with 参数列表`, cmd);
+          } else if (index > args.length) {
+            err(line, `translate %%${index} 需要至少 ${index} 个 with 参数，当前只有 ${args.length} 个`, cmd);
+          }
+        }
+      }
+
+      for (const value of Object.values(node)) visit(value);
+    };
+    visit(obj.rawtext);
   } catch (e) {
     err(line, `tellraw/titleraw JSON 解析失败: ${e.message}`, cmd);
   }

@@ -89,6 +89,27 @@ FMBE 和 MBE 是用原版实体加 `playanimation`、Molang 变量和手持物�
 - `structure load` 适合带方块实体和实体的模板，`clone` 适合纯方块；重载后重新初始化临时状态。
 - 每 tick `titleraw @a`、全图 `@e`、大范围 `fill`/`clone` 和多个 20 Hz 根都需要性能预算。
 
+### 单格条件 T 显
+
+`tellraw`/`titleraw` 的 `translate` 可使用 `%%1`、`%%2` 等参数槽。把目标选择器放在 `with.rawtext` 的第一个参数，把命中时显示的文字放在第二个参数：
+
+```json
+{"translate":"%%2","with":{"rawtext":[
+  {"selector":"@s[scores={quest=1}]"},
+  {"text":"§a已领取"}
+]}}
+```
+
+选择器命中时，第二个参数存在，显示“已领取”；选择器未命中时，该参数被省略，第二个槽没有内容，整段不显示。多个互斥的 `%%2` 条件块可以放在同一条 rawtext 中，让一个命令方块同时处理多个显示状态。
+
+工程约束：
+
+- 多个选择器不能重叠；重叠时会同时显示多段文字。需要“只选一个”时用互斥分数区间，或在确认 `%%n` 紧凑行为后采用分段模板。
+- 参数槽只影响文本组件，不执行 `give`、传送或状态写入；动作仍按命令和条件链计算。
+- `%%9` 可把 8 个累进选择器和 8 个候选文本放进同一参数列表，但无命中、上限和参数压缩都必须实机测试。它属于 `community-doc`，不作为默认压缩方案。
+- 不要在循环根里每 tick 刷新不变文本。状态变化时触发一次，或用延迟循环降低刷新频率。
+- 网易 `tellraw` 可直接用于验证；`titleraw` 先执行 `/help titleraw`，之后在目标设备记录 actionbar、subtitle 和标题槽的实际结果。
+
 ## 6. 网易高级方案验收
 
 | 层级 | 必测 |
@@ -107,4 +128,4 @@ FMBE 和 MBE 是用原版实体加 `playanimation`、Molang 变量和手持物�
 - [网易开发者：命令列表及概述](https://dev.mc.163.com/dev/mcmanual/mc-dev/mconline/10-addon%E6%95%99%E7%A8%8B/%E7%AC%AC04%E7%AB%A0%EF%BC%9A%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F%EF%BC%8C%E4%BD%A0%E7%9A%84%E5%88%9B%E4%BD%9C%E7%AE%A1%E5%AE%B6/%E8%AF%BE%E7%A8%8B04.%E5%91%BD%E4%BB%A4%E5%88%97%E8%A1%A8%E5%8F%8A%E6%A6%82%E8%BF%B0.html)
 - [Bedrock Wiki：FMBE](https://wiki.bedrock.dev/commands/display-entities)
 - [Bedrock Wiki：MBE](https://wiki.bedrock.dev/commands/block-entities)
-- [yixin-amore/MinecraftBE-Command-Building-Skill](https://github.com/yixin-amore/MinecraftBE-Command-Building-Skill)，审计提交 `c3e5b0c53c70c3c80bd0e093b84e83da53fec522`，MIT；本项目只保留原创改写和验证规则。
+- [yixin-amore/MinecraftBE-Command-Building-Skill](https://github.com/yixin-amore/MinecraftBE-Command-Building-Skill)，审计提交 `9184e4d36c4df62a8fc4e2be951bd9163dd8196a`，MIT；本项目只保留原创改写和验证规则。

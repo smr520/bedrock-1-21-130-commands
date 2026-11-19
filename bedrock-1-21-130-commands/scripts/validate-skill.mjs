@@ -315,7 +315,8 @@ function validateWikiSourceGuide() {
   const required = [
     'https://mc.163.com/dev/mcmanual/mc-dev/mcdocs/1-ModAPI/%E6%9B%B4%E6%96%B0%E4%BF%A1%E6%81%AF/3.10.html',
     'https://github.com/yixin-amore/MinecraftBE-Command-Building-Skill',
-    'c3e5b0c53c70c3c80bd0e093b84e83da53fec522',
+    '9184e4d36c4df62a8fc4e2be951bd9163dd8196a',
+    'https://learn.microsoft.com/en-us/minecraft/creator/reference/content/rawmessagejson?view=minecraft-bedrock-stable',
     'https://learn.microsoft.com/en-us/minecraft/creator/documents/moreinfosources?view=minecraft-bedrock-stable',
     'https://wiki.bedrock.dev/llms.txt',
     'https://minecraft.wiki/w/Commands',

@@ -94,4 +94,4 @@
 
 ## 7. 外部方法来源
 
-命令建模、spec/linter、FMBE/MBE 和数据化章节的设计线索来自 [yixin-amore/MinecraftBE-Command-Building-Skill](https://github.com/yixin-amore/MinecraftBE-Command-Building-Skill)，审计提交 `c3e5b0c53c70c3c80bd0e093b84e83da53fec522`，MIT。当前 skill 已重写为网易优先、纯命令方块优先，并排除了默认 BDX、函数和建筑生成工作流。
+命令建模、spec/linter、FMBE/MBE、数据化和原始文本 UI 章节的设计线索来自 [yixin-amore/MinecraftBE-Command-Building-Skill](https://github.com/yixin-amore/MinecraftBE-Command-Building-Skill)，审计提交 `9184e4d36c4df62a8fc4e2be951bd9163dd8196a`，MIT。当前 skill 已重写为网易优先、纯命令方块优先，并排除了默认 BDX、函数和建筑生成工作流。
