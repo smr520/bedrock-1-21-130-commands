@@ -53,6 +53,14 @@
 
 需要第二实现核对时，可把 WaterStructure 当作外部开发期 oracle，逐文件比较命令实体、物理方块、孤儿、空命令和非空命令。它是 AGPL-3.0，不随 Apache-2.0 skill 打包。当前纯 Python 审计器已在本轮 20 个世界上与它全部对齐；这仍只属于格式回读验证。
 
+网易 `.building` 工程按独立格式审计：
+
+- 确认文件是 zlib 压缩 JSON，再检查 `chunkedBlocks` 等结构；不得把扩展名直接当普通 NBT 或 `.mcworld`。
+- 命令方块通常由 `blockNBT` 和 `blockCompleteNBT` 成对表示。从 `blockNBT` 读取模式，从 `blockCompleteNBT` 读取 `Command`、坐标、延迟、条件和自动模式。
+- 两个 SNBT 字符串可能 URL 编码，也可能包在 JSON string 中；先 URL 解码，再提取，不能直接字符串替换整份文件。
+- 自测至少覆盖循环模式、非空命令、延迟和自动模式的解码。
+- 导出命令后仍运行 `validate-commands.mjs --channel netease`；building 可解析不代表网易编辑器或客户端运行通过。
+
 PhoenixBuilder `.bdx` 只作为结构语料处理：
 
 - 先确认 `BD@` 外层头并记录来源、哈希和解析器版本；不要执行未知工具或自动导入服务器。

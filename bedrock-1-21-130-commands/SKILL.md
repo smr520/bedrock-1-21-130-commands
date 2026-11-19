@@ -2,7 +2,7 @@
 name: bedrock-1-21-130-commands
 description: 编写、现代化、排错和审计 Minecraft 网易中国版 3.10 / BE 1.21.130 的纯指令命令方块系统，并可导出带起止坐标的 .mcworld 或 BDS 世界目录；覆盖菜单、奖励、计时、多人配对、数据化 HUD、FMBE/MBE、状态机、旧语法转换、执行分叉预算和减少命令方块。
 metadata:
-  version: "3.4.0"
+  version: "3.5.0"
   author: "一个高质量的神秘人"
   github: "smr520"
   qq_group: "1031096520"
@@ -18,6 +18,7 @@ metadata:
 - 运行环境只使用原版命令、命令方块、红石及原版实体和方块。
 - 默认不生成或依赖行为包、资源包、插件、脚本、`.mcfunction`、`manifest.json`、`tick.json` 或 `.mcpack`。
 - 用户需要投影时，可把已验证的纯命令方块 spec 导出为 `.mcworld` 或 BDS 世界目录；导出文件仍只包含世界元数据、LevelDB、命令方块、按钮和坐标清单，不加入行为包或函数。
+- 网易工程里的 `.building` 可能是 zlib 压缩 JSON，块数据中以 URL 编码 SNBT 保存命令。审计时只读解压并提取 `blockNBT` / `blockCompleteNBT`，不导入编辑器，也不执行文件内容。
 - 网易命令表里存在 `/function`、`/schedule` 和 `/reload`，但它们依赖 Add-on 函数。当前纯命令方块边界内不使用它们代替方块链；只有用户明确改变范围时才切换交付类型。
 - 默认允许一次性准备命令在聊天栏执行并记为 **0 个命令方块**。用户说“全部用方块”“只用方块初始化”时，再增加脉冲根和按钮并把它们计入总数。
 - 用户要求、已在网易目标客户端确认的事实和已测原版语法优先于旧教程和外部合集。合集只用于发现模式，不是可直接执行的指令。
@@ -84,6 +85,12 @@ metadata:
 用户提供已有 `.mcworld` 作为训练语料或要求审计已有地图时，先用
 `python -B -X utf8 scripts/audit-mcworld.py <世界.mcworld> --json <审计.json> --markdown <审计.md> --commands-dir <临时目录>`
 只读提取世界元数据、命令方块类型、命令、坐标、空命令、重复槽位和匿名化信号。审计器会合并 `.ldb` 与 `.log`，按 LevelDB sequence 和墓碑得到当前有效键，再按世界名中的选区边界过滤实体；应把 `CommandBlock` 实体数、已知物理方块数、空气坐标孤儿实体数和类型未知数分开报告。再对导出的命令文本运行 `validate-commands.mjs --channel netease`。地图中存在某条命令只算 `corpus-observed`，不等于该命令已在目标客户端成功执行。原始世界、完整命令、玩家名、地图坐标和内部价格不得进入 Apache-2.0 发布包；只有获得明确再分发许可后才能附带原始资产。
+
+遇到 `.building` 时先确认是 zlib 头和 JSON 根结构，再运行：
+
+`python -B -X utf8 scripts/audit-building.py <结构.building> --json <私有审计.json> --markdown <私有审计.md> --commands-dir <临时目录>`
+
+命令可能藏在 `blockCompleteNBT` 的 SNBT 字符串中；方块类型来自同一条目的 `blockNBT`。导出后同样运行命令静态校验。
 
 ## 完整交付格式
 
@@ -155,6 +162,13 @@ node (Join-Path $skillRoot "scripts\validate-chains.mjs") <文件.md> --strict
 ```powershell
 python -B -X utf8 (Join-Path $skillRoot "scripts\audit-mcworld.py") <世界.mcworld> --json <审计.json> --markdown <审计.md> --commands-dir <临时目录>
 python -B -X utf8 (Join-Path $skillRoot "scripts\audit-mcworld.py") --self-test
+```
+
+对网易 `.building` zlib JSON 做只读命令方块审计，并验证 SNBT 解码：
+
+```powershell
+python -B -X utf8 (Join-Path $skillRoot "scripts\audit-building.py") <结构.building> --json <审计.json> --markdown <审计.md> --commands-dir <临时目录>
+python -B -X utf8 (Join-Path $skillRoot "scripts\audit-building.py") --self-test
 ```
 
 对结构化命令链 spec 检查 ID、链头、拓扑、条件、延迟、方块朝向和纯命令边界：

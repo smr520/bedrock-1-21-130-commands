@@ -118,6 +118,14 @@ python -B -X utf8 scripts\audit-mcworld.py <输出.mcworld> --json <回读.json>
 - 空命令、未知方块类型和物理/NBT 不匹配均为 0，除非 spec 明确要求预留空方块。
 - 回读通过仍只证明静态数据结构一致；按钮、箭头、区块加载和客户端导入继续标为运行时未验证。
 
+如果源工程是网易 `.building`，先运行：
+
+```powershell
+python -B -X utf8 scripts\audit-building.py <结构.building> --json <building.json> --commands-dir <私有命令目录>
+```
+
+该格式是 zlib JSON，命令位于 URL 编码 SNBT 的 `blockCompleteNBT` 中。先核对命令方块数量、空命令、模式和命令集合，再把审计后的 spec 用于正式 `.mcworld` / BDS 导出。
+
 格式交叉核对：
 
 - [Microsoft Learn：Packaging a world template](https://learn.microsoft.com/en-us/minecraft/creator/documents/packagingaworldtemplate)
