@@ -22,6 +22,7 @@ QQ 交流群：**1031096520**
 - 菜单、商店、撤离、HUD、欢迎、计时、冷却、交易锁和 BOSS 状态模板。
 - 1 格条件 T 显：用 `%%2` 原始文本参数槽按分数选择或省略提示文字，减少显示分支命令方块。
 - `.mcworld` / BDS 投影导出：自动摆放命令方块、按钮和朝向，文件名、世界名和 `projection.json` 同时记录起止坐标。
+- 已有 `.mcworld` 只读审计：读取世界元数据、命令方块类型、命令文本、坐标、空格、循环/条件/延迟和匿名化信号，再把命令导出到本地校验器。
 - 网易高级玩法路由：FMBE/MBE、数据化 RPG、T 显、武器触发、UID 和二进制坐标。
 - 1 格同分双人互传示例，含按钮归属、在线检查和同分失败路径。
 - 3 格动作栏优先级仲裁，可在普通 HUD、撤离进度和菜单之间只显示一项。
@@ -59,6 +60,7 @@ node scripts\validate-skill.mjs
 node scripts\selftest.mjs
 python -B -X utf8 scripts\scan-corpora.py --self-test
 python -B -X utf8 scripts\export-projection.py --self-test
+python -B -X utf8 scripts\audit-mcworld.py --self-test
 ```
 
 规划多个系统的预算和共用状态：
@@ -78,6 +80,18 @@ node scripts\validate-chain-spec.mjs examples\same-score-pair-teleport.spec.json
 ```powershell
 python -B -X utf8 scripts\export-projection.py examples\same-score-pair-teleport.spec.json --outdir build\exports
 ```
+
+审计已有 `.mcworld`：
+
+```powershell
+python -B -X utf8 scripts\audit-mcworld.py <世界.mcworld> `
+  --json <私有审计.json> `
+  --markdown <私有审计.md> `
+  --commands-dir <私有命令目录>
+node scripts\validate-commands.mjs <私有命令目录>\world-1.commands.txt --channel netease
+```
+
+审计器不导入或执行世界，也不从 LevelDB 的 `.ldb` 表文件猜测命令；它要求世界容器中保留可解析的 `db/*.log` 写前日志。原始地图、完整命令、玩家名和地图专属文本属于私有审计产物，不应直接提交到公开仓库。
 
 ## 示例
 
@@ -127,7 +141,9 @@ HUD 仲裁的 3 格只统计仲裁链本身。接入现有菜单、撤离或 HUD
 
 ## 验证状态
 
-`v3.1.0` 已通过 25 份运行文档、29 份 Markdown 内部链接、命令语法、Java 选择器参数回归、链级结构、JSON 链 spec、rawtext 参数槽、纯命令 UI 验收、`.mcworld` / BDS 导出、`if score` 单目标、传送目的地、配方预算、回归测试和敏感信息审计。发布环境未安装 Minecraft 客户端或实际 BDS，因此命令与投影仍标记为 `static-only` / `runtime-unverified`，没有宣称完成网易 1.21.130 实机验收。
+`v3.2.0` 已通过 25 份运行文档、29 份 Markdown 内部链接、命令语法、Java 选择器参数回归、链级结构、JSON 链 spec、rawtext 参数槽、纯命令 UI 验收、`.mcworld` / BDS 导出、已有世界命令方块提取、`if score` 单目标、传送目的地、配方预算、回归测试和敏感信息审计。发布环境未安装 Minecraft 客户端或实际 BDS，因此命令与投影仍标记为 `static-only` / `runtime-unverified`，没有宣称完成网易 1.21.130 实机验收。
+
+本次匿名化语料审计见 [AUDIT-mcworld-corpus-3.2.0.md](https://github.com/smr520/bedrock-1-21-130-commands/releases/download/v3.2.0/AUDIT-mcworld-corpus-3.2.0.md)。
 
 详细结果见 [VALIDATION.md](VALIDATION.md)。
 

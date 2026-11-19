@@ -2,7 +2,7 @@
 name: bedrock-1-21-130-commands
 description: 编写、现代化、排错和审计 Minecraft 网易中国版 3.10 / BE 1.21.130 的纯指令命令方块系统，并可导出带起止坐标的 .mcworld 或 BDS 世界目录；覆盖菜单、奖励、计时、多人配对、数据化 HUD、FMBE/MBE、状态机、旧语法转换、执行分叉预算和减少命令方块。
 metadata:
-  version: "3.1.0"
+  version: "3.2.0"
   author: "一个高质量的神秘人"
   github: "smr520"
   qq_group: "1031096520"
@@ -81,6 +81,10 @@ metadata:
 7. **导出投影**：用户需要 `.mcworld`、BDS 或精确命令区坐标时，读取 [projection-export.md](references/projection-export.md)，从同一份 spec 生成世界文件；文件名和 `projection.json` 必须同时记录起止坐标。
 8. **列实机测试**：覆盖成功、失败、边界、重复触发、多人、离开加载区、重进和清理路径。静态通过后仍标为 `static-only`。
 
+用户提供已有 `.mcworld` 作为训练语料或要求审计已有地图时，先用
+`python -B -X utf8 scripts/audit-mcworld.py <世界.mcworld> --json <审计.json> --markdown <审计.md> --commands-dir <临时目录>`
+只读提取世界元数据、命令方块类型、命令、坐标、空命令和匿名化信号。再对导出的命令文本运行 `validate-commands.mjs --channel netease`。地图中存在某条命令只算 `corpus-observed`，不等于该命令已在目标客户端成功执行。原始世界、完整命令、玩家名、地图坐标和内部价格不得进入 Apache-2.0 发布包；只有获得明确再分发许可后才能附带原始资产。
+
 ## 完整交付格式
 
 回答用户时，先给能落地的内容，再解释原理。至少包含：
@@ -144,6 +148,13 @@ node (Join-Path $skillRoot "scripts\validate-skill.mjs")
 
 ```powershell
 node (Join-Path $skillRoot "scripts\validate-chains.mjs") <文件.md> --strict
+```
+
+对已有 `.mcworld` 做只读语料审计，并验证审计器自身：
+
+```powershell
+python -B -X utf8 (Join-Path $skillRoot "scripts\audit-mcworld.py") <世界.mcworld> --json <审计.json> --markdown <审计.md> --commands-dir <临时目录>
+python -B -X utf8 (Join-Path $skillRoot "scripts\audit-mcworld.py") --self-test
 ```
 
 对结构化命令链 spec 检查 ID、链头、拓扑、条件、延迟、方块朝向和纯命令边界：

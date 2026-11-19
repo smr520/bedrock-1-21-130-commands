@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   validate:
-    name: NetEase commands, chains, specs and skill package
+    name: NetEase commands, chains, worlds and skill package
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -51,6 +51,9 @@ jobs:
 
       - name: Test MCWorld and BDS projection export
         run: python -B -X utf8 scripts/export-projection.py --self-test
+
+      - name: Test existing MCWorld corpus audit
+        run: python -B -X utf8 scripts/audit-mcworld.py --self-test
 
       - name: Validate recipe planning
         run: node scripts/plan-recipes.mjs server-starter-core player-hud hud-arbiter

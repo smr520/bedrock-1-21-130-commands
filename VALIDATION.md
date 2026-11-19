@@ -22,25 +22,39 @@
 | `node scripts/validate-skill.mjs` | 通过；25 份运行时文档、29 份 Markdown 内部链接、入口路由、网易与 Wiki 关键来源、命令语法、Java 选择器参数、rawtext 参数槽、纯命令 UI、链结构、JSON schema、世界模板、链 spec、配方注册表和 CB 声明一致 |
 | `node scripts/selftest.mjs` | 通过；校验器正向、负向、严格模式、动作型与纯条件型 `execute`、`name=` 正向、`predicate=`/`advancements=` 负向、网易未验证警告、rawtext 参数槽、投影配置、链 spec、单目标分数比较、传送目的地和配方复用 |
 | `python scripts/export-projection.py --self-test` | 通过；从三格蛇形链生成 `.mcworld` 和 BDS 目录，检查世界容器、关键 LevelDB 文件、命令方块 NBT、起止坐标及 BDS/archive 逐字节一致性 |
+| `python scripts/audit-mcworld.py --self-test` | 通过；合成 `.mcworld` 后检查世界元数据、LevelDB 写前日志、命令方块 NBT、命令提取和 ZIP 路径安全 |
 | `node scripts/validate-chain-spec.mjs` | 通过；同分互传 spec 无错误，可生成 Markdown 构建表 |
 | `validate-commands.mjs --channel netease` | 通过；未验证命令给警告，纯命令方块中的函数/调度依赖仍被拦截 |
 | `python -B -X utf8 scripts/scan-corpora.py --self-test` | 通过；去重、嵌套 ZIP、DOCX、7z 降级和不可解析文件盘点 |
 | Node.js `--check` | 6 个 `.mjs` 脚本全部通过语法检查 |
-| Python 语法与自测 | 2 个 `.py` 脚本通过语法检查；语料扫描器和投影导出器自测通过 |
+| Python 语法与自测 | 3 个 `.py` 脚本通过语法检查；语料扫描器、投影导出器和已有世界审计器自测通过 |
 | JSON / YAML 解析 | skill 内全部 JSON、发布仓库内 5 个 GitHub YAML 全部通过解析 |
 | UTF-8 完整性 | 所有发布文本不含 `U+FFFD`；校验器新增负向回归用例 |
 | 敏感信息扫描 | 未发现密钥、令牌、邮箱、手机号、个人绝对路径或口令 |
-| 二进制文件检查 | skill 目录 45 个文件中，44 个 UTF-8 文本通过；唯一二进制是已清洗、固定哈希的 2,828-byte `world-template.level.dat` |
-| 安装目录哈希比对 | 通过；源目录、发布目录和已安装 skill 的 45 个文件逐文件 SHA-256 一致 |
-| ZIP 完整性 | 通过；`v3.1.0` ZIP 共 45 个文件、163,600 bytes，逐文件 SHA-256 与发布目录一致，没有越界路径 |
+| 二进制文件检查 | skill 目录 46 个文件中，45 个 UTF-8 文本通过；唯一二进制是已清洗、固定哈希的 2,828-byte `world-template.level.dat` |
+| 安装目录哈希比对 | 通过；源目录、发布目录和已安装 skill 的 46 个文件逐文件 SHA-256 一致 |
+| ZIP 完整性 | 通过；`v3.2.0` ZIP 共 46 个文件、174,347 bytes，逐文件 SHA-256 与发布目录一致，没有越界路径 |
 
 ZIP SHA-256：
 
 ```text
-a0e0772451cf9de51ef930f69eeb0ff5628238d6b1f6fd5a88c3dffa094089bc
+f7df3f16673b642d917075ad5bad9b431b37c368a4074e79bec9d4db869dcd67
 ```
 
-GitHub Actions 在每次推送到 `main` 和每个拉取请求中执行脚本语法检查、整包校验、回归测试、语料扫描器自测和配方规划。
+GitHub Actions 在每次推送到 `main` 和每个拉取请求中执行脚本语法检查、整包校验、回归测试、语料扫描器自测、已有世界审计自测和配方规划。
+
+## MCWorld 语料审计
+
+两份用户提供的网易 `.mcworld` 均完成只读解包、LevelDB 写前日志解析、命令方块实体读取和子区块方块类型回读，没有在世界内执行命令。
+
+| 样本 | 命令方块 | 链 / 循环 / 脉冲 | 非空 / 唯一 | 空命令 | 静态结果 |
+| --- | ---: | --- | --- | ---: | --- |
+| 综合系统世界 | 898 | 679 / 153 / 66 | 877 / 812 | 21 | 14 错误、91 警告 |
+| 商店世界 | 93 | 6 / 65 / 22 | 72 / 52 | 21 | 14 错误、0 警告 |
+
+综合系统世界可提炼菜单、经济、玩家事件、状态机和长链组织；商店世界主要作为价格表膨胀、空方块和参数错误的反例。两者都没有原样进入 skill 或 Apache-2.0 发布包。
+
+审计器能读取 ZIP 根目录结构和 `db/*.log` 写前日志；如果世界只剩 LevelDB `.ldb` 表文件，会明确报错，不把未解析结果当成零命令方块。
 
 ## 预算检查
 
