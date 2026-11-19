@@ -2,7 +2,7 @@
 name: bedrock-1-21-130-commands
 description: 编写、现代化、排错和审计 Minecraft 网易中国版 3.10 / BE 1.21.130 的纯指令命令方块系统，并可导出带起止坐标的 .mcworld 或 BDS 世界目录；覆盖菜单、奖励、计时、多人配对、数据化 HUD、FMBE/MBE、状态机、旧语法转换、执行分叉预算和减少命令方块。
 metadata:
-  version: "3.3.0"
+  version: "3.4.0"
   author: "一个高质量的神秘人"
   github: "smr520"
   qq_group: "1031096520"
@@ -83,7 +83,7 @@ metadata:
 
 用户提供已有 `.mcworld` 作为训练语料或要求审计已有地图时，先用
 `python -B -X utf8 scripts/audit-mcworld.py <世界.mcworld> --json <审计.json> --markdown <审计.md> --commands-dir <临时目录>`
-只读提取世界元数据、命令方块类型、命令、坐标、空命令、重复槽位和匿名化信号，并把 `CommandBlock` 实体数、已知物理方块数、空气坐标孤儿实体数和类型未知数分开报告。再对导出的命令文本运行 `validate-commands.mjs --channel netease`。地图中存在某条命令只算 `corpus-observed`，不等于该命令已在目标客户端成功执行。原始世界、完整命令、玩家名、地图坐标和内部价格不得进入 Apache-2.0 发布包；只有获得明确再分发许可后才能附带原始资产。
+只读提取世界元数据、命令方块类型、命令、坐标、空命令、重复槽位和匿名化信号。审计器会合并 `.ldb` 与 `.log`，按 LevelDB sequence 和墓碑得到当前有效键，再按世界名中的选区边界过滤实体；应把 `CommandBlock` 实体数、已知物理方块数、空气坐标孤儿实体数和类型未知数分开报告。再对导出的命令文本运行 `validate-commands.mjs --channel netease`。地图中存在某条命令只算 `corpus-observed`，不等于该命令已在目标客户端成功执行。原始世界、完整命令、玩家名、地图坐标和内部价格不得进入 Apache-2.0 发布包；只有获得明确再分发许可后才能附带原始资产。
 
 ## 完整交付格式
 
@@ -150,7 +150,7 @@ node (Join-Path $skillRoot "scripts\validate-skill.mjs")
 node (Join-Path $skillRoot "scripts\validate-chains.mjs") <文件.md> --strict
 ```
 
-对已有 `.mcworld` 做只读语料审计，并验证审计器自身：
+对已有 `.mcworld` 做只读语料审计，并验证日志、纯 `.ldb`、sequence、选区和命令解码：
 
 ```powershell
 python -B -X utf8 (Join-Path $skillRoot "scripts\audit-mcworld.py") <世界.mcworld> --json <审计.json> --markdown <审计.md> --commands-dir <临时目录>
@@ -221,6 +221,7 @@ node (Join-Path $skillRoot "scripts\plan-recipes.mjs") player-hud shop-single-op
 | 网易 1.21.130 命令边界、证据等级和高级纯指令能力 | [netease-1.21.130.md](references/netease-1.21.130.md) |
 | FMBE/MBE、数据化 RPG、武器触发、UID 和大型网易地图 | [netease-advanced.md](references/netease-advanced.md) |
 | 用户网易语料的匿名模式、旧图迁移和反模式 | [netease-corpus-patterns.md](references/netease-corpus-patterns.md) |
+| LevelDB 规范化、选区裁剪、训练统计与外部 oracle | [corpus-validation.md](references/corpus-validation.md) |
 | 减少方块、初始化、交易和显示压缩 | [block-budget.md](references/block-budget.md) |
 | 组合多个系统、共享显示、冷却和交易锁 | [shared-core.md](references/shared-core.md) |
 | 常用命令、Java 差异、文本与方块语法 | [commands.md](references/commands.md) |

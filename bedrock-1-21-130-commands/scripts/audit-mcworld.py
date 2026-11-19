@@ -29,6 +29,29 @@ TAG_COMPOUND = 10
 TAG_INT_ARRAY = 11
 MAX_ENTRY_BYTES = 256 * 1024 * 1024
 MAX_ARCHIVE_BYTES = 512 * 1024 * 1024
+MAX_TABLE_BLOCK_BYTES = 64 * 1024 * 1024
+LEVELDB_TABLE_MAGIC = bytes.fromhex("57fb808b247547db")
+SELECTION_BOUNDS_RE = re.compile(
+    r"@\[(-?\d+),(-?\d+),(-?\d+)\]~\[(-?\d+),(-?\d+),(-?\d+)\]"
+)
+CRC32C_POLYNOMIAL = 0x82F63B78
+
+
+def make_crc32c_table():
+    values = []
+    for initial in range(256):
+        value = initial
+        for _ in range(8):
+            value = (
+                value >> 1 ^ CRC32C_POLYNOMIAL
+                if value & 1
+                else value >> 1
+            )
+        values.append(value)
+    return tuple(values)
+
+
+CRC32C_TABLE = make_crc32c_table()
 
 
 class AuditError(RuntimeError):
@@ -100,14 +123,84 @@ def encode_log(pairs, block_size: int = 32768):
     for sequence, key, value in pairs:
         body = (
             struct.pack("<QI", sequence, 1)
-            + bytes([1])
+            + bytes([0 if value is None else 1])
             + encode_varint(len(key))
             + key
-            + encode_varint(len(value))
-            + value
         )
+        if value is not None:
+            body += encode_varint(len(value)) + value
         emit(body)
     return bytes(output)
+
+
+def encode_block_handle(handle):
+    offset, size = handle
+    return encode_varint(offset) + encode_varint(size)
+
+
+def encode_block_entries(entries):
+    output = bytearray()
+    previous = b""
+    for key, value in entries:
+        shared = 0
+        while (
+            shared < len(previous)
+            and shared < len(key)
+            and previous[shared] == key[shared]
+        ):
+            shared += 1
+        suffix = key[shared:]
+        output.extend(encode_varint(shared))
+        output.extend(encode_varint(len(suffix)))
+        output.extend(encode_varint(len(value)))
+        output.extend(suffix)
+        output.extend(value)
+        previous = key
+    restart_offset = len(output)
+    output.extend(struct.pack("<I", 0))
+    output.extend(struct.pack("<I", 1))
+    return bytes(output), restart_offset
+
+
+def encode_table_block(entries):
+    payload, _ = encode_block_entries(entries)
+    compression = 0
+    checksum = mask_crc(crc32c(bytes([compression]) + payload))
+    return payload + bytes([compression]) + struct.pack("<I", checksum)
+
+
+def encode_table(entries):
+    entries = sorted(entries, key=lambda item: item[0])
+    data_block = encode_table_block(entries)
+    data_handle = (0, len(data_block) - 5)
+
+    index_key = entries[-1][0] if entries else b""
+    index_block = encode_table_block(
+        [(index_key, encode_block_handle(data_handle))]
+    )
+    index_handle = (len(data_block), len(index_block) - 5)
+
+    meta_block = encode_table_block([])
+    meta_handle = (
+        index_handle[0] + len(index_block),
+        len(meta_block) - 5,
+    )
+    footer_prefix = (
+        encode_block_handle(meta_handle)
+        + encode_block_handle(index_handle)
+    )
+    if len(footer_prefix) > 40:
+        raise AuditError("self-test table handles do not fit the footer")
+    footer = (
+        footer_prefix
+        + b"\x00" * (40 - len(footer_prefix))
+        + LEVELDB_TABLE_MAGIC
+    )
+    return data_block + index_block + meta_block + footer
+
+
+def encode_internal_key(user_key: bytes, sequence: int, value_type: int = 1):
+    return user_key + struct.pack("<Q", (sequence << 8) | value_type)
 
 
 def decode_payload(data: bytes, offset: int, tag: int):
@@ -205,12 +298,9 @@ def decode_varint(data: bytes, offset: int):
 
 
 def crc32c(data: bytes):
-    polynomial = 0x82F63B78
     crc = 0xFFFFFFFF
     for byte in data:
-        crc ^= byte
-        for _ in range(8):
-            crc = (crc >> 1) ^ polynomial if crc & 1 else crc >> 1
+        crc = CRC32C_TABLE[(crc ^ byte) & 0xFF] ^ (crc >> 8)
     return crc ^ 0xFFFFFFFF
 
 
@@ -252,19 +342,197 @@ def decode_log(data: bytes, block_size: int = 32768):
             raise AuditError("truncated LevelDB write batch")
         sequence, count = struct.unpack("<QI", payload[:12])
         offset = 12
-        for _ in range(count):
+        for item_index in range(count):
             value_type = payload[offset]
             offset += 1
             key_length, offset = decode_varint(payload, offset)
             key = payload[offset:offset + key_length]
             offset += key_length
             if value_type == 0:
+                records.append((sequence + item_index, key, None))
                 continue
             value_length, offset = decode_varint(payload, offset)
             value = payload[offset:offset + value_length]
             offset += value_length
-            records.append((sequence, key, value))
+            records.append((sequence + item_index, key, value))
     return records, bad_records
+
+
+def decode_snappy(data: bytes):
+    expected, offset = decode_varint(data, 0)
+    if expected > MAX_TABLE_BLOCK_BYTES:
+        raise AuditError(f"Snappy block expands to {expected} bytes")
+    output = bytearray()
+    while offset < len(data):
+        tag = data[offset]
+        offset += 1
+        kind = tag & 0x03
+        if kind == 0:
+            length_code = tag >> 2
+            if length_code < 60:
+                length = length_code + 1
+            else:
+                byte_count = length_code - 59
+                if offset + byte_count > len(data):
+                    raise AuditError("truncated Snappy literal length")
+                length = int.from_bytes(
+                    data[offset:offset + byte_count],
+                    "little",
+                ) + 1
+                offset += byte_count
+            if offset + length > len(data):
+                raise AuditError("truncated Snappy literal")
+            output.extend(data[offset:offset + length])
+            offset += length
+        elif kind == 1:
+            if offset >= len(data):
+                raise AuditError("truncated Snappy copy-1")
+            length = ((tag >> 2) & 0x07) + 4
+            distance = ((tag & 0xE0) << 3) | data[offset]
+            offset += 1
+        elif kind == 2:
+            if offset + 2 > len(data):
+                raise AuditError("truncated Snappy copy-2")
+            length = (tag >> 2) + 1
+            distance = int.from_bytes(data[offset:offset + 2], "little")
+            offset += 2
+        else:
+            if offset + 4 > len(data):
+                raise AuditError("truncated Snappy copy-4")
+            length = (tag >> 2) + 1
+            distance = int.from_bytes(data[offset:offset + 4], "little")
+            offset += 4
+
+        if kind:
+            if distance <= 0 or distance > len(output):
+                raise AuditError("invalid Snappy copy distance")
+            for _ in range(length):
+                output.append(output[-distance])
+        if len(output) > MAX_TABLE_BLOCK_BYTES:
+            raise AuditError("decompressed table block exceeds safety limit")
+
+    if len(output) != expected:
+        raise AuditError(
+            f"Snappy size mismatch: expected {expected}, decoded {len(output)}"
+        )
+    return bytes(output)
+
+
+def decode_handle(data: bytes, offset: int):
+    block_offset, offset = decode_varint(data, offset)
+    block_size, offset = decode_varint(data, offset)
+    return (block_offset, block_size), offset
+
+
+def decode_leveldb_block(data: bytes, handle):
+    offset, size = handle
+    payload_end = offset + size
+    trailer_end = payload_end + 5
+    if offset < 0 or size <= 0 or trailer_end > len(data):
+        raise AuditError("LevelDB block handle is outside the table")
+    payload = data[offset:payload_end]
+    compression = data[payload_end]
+    stored_crc = struct.unpack("<I", data[payload_end + 1:trailer_end])[0]
+    actual_crc = mask_crc(crc32c(bytes([compression]) + payload))
+    if compression == 0:
+        decoded = payload
+    elif compression == 1:
+        decoded = decode_snappy(payload)
+    elif compression == 2:
+        import zlib
+
+        decoded = zlib.decompress(payload)
+    elif compression == 4:
+        import zlib
+
+        decoded = zlib.decompress(payload, -zlib.MAX_WBITS)
+    else:
+        raise AuditError(f"unsupported LevelDB block compression {compression}")
+    if len(decoded) > MAX_TABLE_BLOCK_BYTES:
+        raise AuditError("decoded table block exceeds safety limit")
+    return decoded, actual_crc != stored_crc
+
+
+def decode_table_entries(data: bytes):
+    if len(data) < 8:
+        raise AuditError("truncated table block")
+    restart_count = struct.unpack("<I", data[-4:])[0]
+    restart_offset = len(data) - 4 - restart_count * 4
+    if restart_count <= 0 or restart_offset < 0:
+        raise AuditError("invalid table block restart array")
+
+    entries = []
+    offset = 0
+    previous = b""
+    while offset < restart_offset:
+        shared, offset = decode_varint(data, offset)
+        non_shared, offset = decode_varint(data, offset)
+        value_length, offset = decode_varint(data, offset)
+        if shared > len(previous):
+            raise AuditError("table key shares more bytes than the previous key")
+        key_end = offset + non_shared
+        value_end = key_end + value_length
+        if key_end > restart_offset or value_end > restart_offset:
+            raise AuditError("table entry exceeds its data region")
+        key = previous[:shared] + data[offset:key_end]
+        value = data[key_end:value_end]
+        entries.append((key, value))
+        previous = key
+        offset = value_end
+    return entries
+
+
+def decode_table(data: bytes):
+    if len(data) < 48 or data[-8:] != LEVELDB_TABLE_MAGIC:
+        raise AuditError("invalid LevelDB table footer")
+    footer_offset = len(data) - 48
+    _, footer_offset = decode_handle(data, footer_offset)
+    index_handle, _ = decode_handle(data, footer_offset)
+
+    index_payload, index_bad_crc = decode_leveldb_block(data, index_handle)
+    index_entries = decode_table_entries(index_payload)
+    records = []
+    bad_crc = int(index_bad_crc)
+    blocks = 0
+    for _, encoded_handle in index_entries:
+        data_handle, _ = decode_handle(encoded_handle, 0)
+        block_payload, block_bad_crc = decode_leveldb_block(data, data_handle)
+        bad_crc += int(block_bad_crc)
+        blocks += 1
+        for internal_key, value in decode_table_entries(block_payload):
+            if len(internal_key) < 8:
+                raise AuditError("table internal key is shorter than 8 bytes")
+            trailer = int.from_bytes(internal_key[-8:], "little")
+            sequence = trailer >> 8
+            value_type = trailer & 0xFF
+            user_key = internal_key[:-8]
+            if value_type == 0:
+                records.append((sequence, user_key, None))
+            elif value_type == 1:
+                records.append((sequence, user_key, value))
+            else:
+                raise AuditError(f"unknown LevelDB value type {value_type}")
+    return records, bad_crc, blocks
+
+
+def merge_leveldb_current(records):
+    latest = {}
+    for sequence, key, value in records:
+        previous = latest.get(key)
+        if (
+            previous is None
+            or sequence > previous[0]
+            or (sequence == previous[0] and value is not None and previous[1] is None)
+        ):
+            latest[key] = (sequence, value)
+    current = [
+        (sequence, key, value)
+        for key, (sequence, value) in latest.items()
+        if value is not None
+    ]
+    current.sort(key=lambda item: (item[0], item[1]))
+    tombstones = sum(1 for _, value in latest.values() if value is None)
+    return current, len(latest) - tombstones, tombstones
 
 
 def unpack_nbt_value(value, default=None):
@@ -354,6 +622,52 @@ def parse_command_blocks(entities):
             }
         )
     return command_blocks, other_entity_types
+
+
+def find_selection_bounds(levelname: str, path: Path):
+    for text in (levelname, path.name, str(path)):
+        matches = SELECTION_BOUNDS_RE.findall(text)
+        if not matches:
+            continue
+        values = tuple(int(value) for value in matches[-1])
+        start = values[:3]
+        end = values[3:]
+        return (
+            min(start[0], end[0]),
+            min(start[1], end[1]),
+            min(start[2], end[2]),
+        ), (
+            max(start[0], end[0]),
+            max(start[1], end[1]),
+            max(start[2], end[2]),
+        )
+    return None
+
+
+def filter_entities_to_bounds(entities, bounds):
+    if bounds is None:
+        return entities
+    minimum, maximum = bounds
+    filtered = []
+    for entity in entities:
+        axes = [
+            unpack_nbt_value(entity.get(axis))
+            for axis in ("x", "y", "z")
+        ]
+        if any(axis is None for axis in axes):
+            filtered.append(entity)
+            continue
+        try:
+            position = tuple(int(axis) for axis in axes)
+        except (TypeError, ValueError):
+            filtered.append(entity)
+            continue
+        if all(
+            minimum[index] <= position[index] <= maximum[index]
+            for index in range(3)
+        ):
+            filtered.append(entity)
+    return filtered
 
 
 def decode_subchunk_blocks(key: bytes, value: bytes):
@@ -463,25 +777,42 @@ def inspect_world(path: Path):
         table_files = [
             name for name in sorted(names) if name.startswith("db/") and name.endswith(".ldb")
         ]
-        all_records = []
+        history_records = []
         bad_records = 0
         for name in logs:
             records, bad = decode_log(archive.read(name))
-            all_records.extend(records)
+            history_records.extend(records)
             bad_records += bad
+        log_record_count = len(history_records)
+        table_record_count = 0
+        table_blocks = 0
+        table_bad_crc = 0
+        table_errors = []
+        for name in table_files:
+            try:
+                records, bad, blocks = decode_table(archive.read(name))
+            except Exception as error:
+                table_errors.append(f"{name}: {error}")
+                continue
+            history_records.extend(records)
+            table_record_count += len(records)
+            table_blocks += blocks
+            table_bad_crc += bad
 
-    if not logs and table_files:
+    current_records, live_keys, tombstones = merge_leveldb_current(history_records)
+    if not current_records and table_errors:
         raise AuditError(
-            "the world uses LevelDB .ldb tables but no write-ahead .log; "
-            "command-block extraction from table files is unsupported"
+            "all LevelDB table files failed to decode: " + "; ".join(table_errors[:5])
         )
 
-    entities, block_entity_values, parse_errors = entity_records(all_records)
+    selection_bounds = find_selection_bounds(levelname, path)
+    entities, block_entity_values, parse_errors = entity_records(current_records)
+    entities = filter_entities_to_bounds(entities, selection_bounds)
     command_blocks, entity_types = parse_command_blocks(entities)
     block_grid = {}
     subchunk_errors = []
     subchunks = 0
-    for sequence, key, value in all_records:
+    for sequence, key, value in current_records:
         if len(key) < 10 or key[8] != 0x2F:
             continue
         subchunks += 1
@@ -496,7 +827,9 @@ def inspect_world(path: Path):
     block_type_counts = collections.Counter(
         block["blockType"] or "<unknown>" for block in command_blocks
     )
-    key_tags = collections.Counter(key[8] for _, key, _ in all_records if len(key) >= 9)
+    key_tags = collections.Counter(
+        key[8] for _, key, _ in current_records if len(key) >= 9
+    )
     commands = [block["command"] for block in command_blocks]
     nonempty_commands = [command for command in commands if command.strip()]
     normalized_nonempty_commands = [
@@ -584,14 +917,22 @@ def inspect_world(path: Path):
         "level": {
             "storageVersion": level_storage,
             "levelname": levelname,
+            "selectionBounds": selection_bounds,
             "fields": level_fields,
             "topLevelKeys": sorted(level.keys()),
         },
         "database": {
             "logFiles": logs,
             "tableFiles": table_files,
-            "records": len(all_records),
+            "records": len(current_records),
+            "historyRecords": len(history_records),
+            "logRecords": log_record_count,
+            "tableRecords": table_record_count,
+            "liveKeys": live_keys,
+            "tombstones": tombstones,
+            "tableBlocks": table_blocks,
             "badCrcRecords": bad_records,
+            "tableErrors": table_errors,
             "keyTags": {f"0x{tag:02X}": count for tag, count in sorted(key_tags.items())},
             "blockEntityValues": block_entity_values,
             "subchunks": subchunks,
@@ -698,7 +1039,14 @@ def markdown_report(results, output: Path):
                 f"- SHA-256：`{result['sha256']}`",
                 f"- 文件大小：{result['fileSize']} bytes",
                 f"- 世界名：`{level['levelname']}`",
-                f"- LevelDB 日志记录：{database['records']}",
+                f"- 选区边界：`{level['selectionBounds']}`",
+                f"- LevelDB 历史上写入记录：{database['historyRecords']}",
+                f"- LevelDB 当前有效键：{database['records']}",
+                f"- 日志记录：{database['logRecords']}",
+                f"- `.ldb` 表记录：{database['tableRecords']}",
+                f"- `.ldb` 数据块：{database['tableBlocks']}",
+                f"- 墓碑键：{database['tombstones']}",
+                f"- `.ldb` 表解析异常：{len(database['tableErrors'])}",
                 f"- 方块实体：{database['entitiesParsed']}",
                 f"- 命令方块：{command_data['count']}",
                 f"- 唯一命令：{command_data['unique']}",
@@ -871,7 +1219,14 @@ def self_test():
         value = command_block(0, "/say self-test") + command_block(
             1, "/execute as @a at @s run tag @s add audit"
         )
-        log = encode_log([(1, key, value)])
+        tombstone_key = struct.pack("<ii", 0, 0) + b"\x31\x02"
+        log = encode_log(
+            [
+                (1, key, value),
+                (2, tombstone_key, command_block(2, "/say stale")),
+                (3, tombstone_key, None),
+            ]
+        )
         archive_path = root / "self-test.mcworld"
         with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as archive:
             archive.writestr("level.dat", level_dat)
@@ -889,8 +1244,65 @@ def self_test():
         assert result["commands"]["duplicateSlots"] == 0
         assert result["commands"]["missingRunSpace"] == 0
         assert result["database"]["parseErrors"] == []
+        assert result["database"]["tombstones"] == 1
         assert result["archive"]["unsafePaths"] == []
-    print("self-test passed: .mcworld metadata and command-block decoding")
+
+        table_entries = [
+            (
+                encode_internal_key(key, sequence),
+                command_block(x, command),
+            )
+            for key, sequence, x, command in (
+                (
+                    struct.pack("<ii", 0, 0) + b"\x31",
+                    200,
+                    0,
+                    "/say current-state-a",
+                ),
+                (
+                    struct.pack("<ii", 0, 0) + b"\x31\x00",
+                    201,
+                    1,
+                    "/say current-state-b",
+                ),
+                (
+                    struct.pack("<ii", 0, 0) + b"\x31\x01",
+                    202,
+                    2,
+                    "/say outside-selection",
+                ),
+            )
+        ]
+        table_path = root / "table-only.mcworld"
+        table_level = dict(level)
+        table_level["LevelName"] = (
+            TAG_STRING,
+            "audit-self-test@[-1,-1,-1]~[1,4,1]",
+        )
+        table_level_body = encode_root_compound(table_level)
+        table_level_dat = (
+            struct.pack("<II", 9, len(table_level_body)) + table_level_body
+        )
+        with zipfile.ZipFile(table_path, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("level.dat", table_level_dat)
+            archive.writestr(
+                "levelname.txt",
+                "audit-self-test@[-1,-1,-1]~[1,4,1]",
+            )
+            archive.writestr("db/CURRENT", "MANIFEST-000000\n")
+            archive.writestr("db/000001.ldb", encode_table(table_entries))
+
+        table_result = inspect_world(table_path)
+        assert table_result["commands"]["count"] == 2
+        assert table_result["commands"]["nonEmpty"] == 2
+        assert table_result["database"]["tableFiles"] == ["db/000001.ldb"]
+        assert table_result["database"]["tableRecords"] == 3
+        assert table_result["database"]["tableErrors"] == []
+        assert table_result["level"]["selectionBounds"] == (
+            (-1, -1, -1),
+            (1, 4, 1),
+        )
+    print("self-test passed: log, table, selection and command-block decoding")
 
 
 def main(argv=None):

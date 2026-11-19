@@ -104,6 +104,20 @@ CLI 的 `--origin`、`--axis`、`--layout`、`--width`、`--spawn`、`--world-na
 
 这些检查证明容器和数据结构自洽。当前环境没有网易客户端或实际 BDS，因此仍须记录为 `runtime-unverified`，不能仅凭生成成功宣称实机可导入。
 
+导出后建议再运行只读审计：
+
+```powershell
+python -B -X utf8 scripts\audit-mcworld.py <输出.mcworld> --json <回读.json> --markdown <回读.md>
+```
+
+回读器会合并 LevelDB 的 `.ldb` 与 `.log`，按 sequence 取当前状态，并使用世界名中的起止坐标裁剪实体。交付前核对：
+
+- `projection.json` 的命令方块数与审计器当前状态数一致。
+- `levelname.txt`、文件名与 `projection.json` 的 `bounds` 一致。
+- 没有选区外命令实体混入统计。
+- 空命令、未知方块类型和物理/NBT 不匹配均为 0，除非 spec 明确要求预留空方块。
+- 回读通过仍只证明静态数据结构一致；按钮、箭头、区块加载和客户端导入继续标为运行时未验证。
+
 格式交叉核对：
 
 - [Microsoft Learn：Packaging a world template](https://learn.microsoft.com/en-us/minecraft/creator/documents/packagingaworldtemplate)
