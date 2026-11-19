@@ -8,11 +8,12 @@
 | --- | --- |
 | Node.js | 24.19.0，校验脚本仅使用标准库 |
 | Python | 3.12；扫描器仅使用标准库和可选解析器，`quick_validate.py` 使用 PyYAML 6.0.3 |
+| BDX 外部审计 | `BDXConverter` 1.2.0、MIT；只用于本地只读解析，不进入发布依赖 |
 | Minecraft 客户端 / BDS | 当前环境均未安装 |
 | 默认目标 | 网易中国版 V3.10 / BE1.21.130，纯命令方块 |
 | 兼容目标 | 国际版 Minecraft Bedrock 1.21.130 |
 | 网易来源核对 | 2026-11-16 在线核对网易 3.10 更新页、官方命令列表和常用命令页 |
-| Wiki 来源核对 | 2026-11-19 核对 Microsoft Learn、Bedrock Wiki、Minecraft Wiki、Mojira、MC百科，以及外部提交 `9184e4d36c4df62a8fc4e2be951bd9163dd8196a`、`6836bfe7ae0fd34b2eb02bd210b201294f614e57`、`5238ee29460792c55db73aaeba3a6a02f1869ba7` 的用途和许可边界 |
+| Wiki 来源核对 | 2026-11-19 核对 Microsoft Learn、Bedrock Wiki、Minecraft Wiki、Mojira、MC百科，以及外部提交 `9184e4d36c4df62a8fc4e2be951bd9163dd8196a`、`6836bfe7ae0fd34b2eb02bd210b201294f614e57`、`5238ee29460792c55db73aaeba3a6a02f1869ba7`、`b3316b6003a297c8d13f693ac40270276eff7565` 的用途和许可边界 |
 
 ## 自动检查
 
@@ -22,7 +23,7 @@
 | `node scripts/validate-skill.mjs` | 通过；25 份运行时文档、29 份 Markdown 内部链接、入口路由、网易与 Wiki 关键来源、命令语法、Java 选择器参数、rawtext 参数槽、纯命令 UI、链结构、JSON schema、世界模板、链 spec、配方注册表和 CB 声明一致 |
 | `node scripts/selftest.mjs` | 通过；校验器正向、负向、严格模式、动作型与纯条件型 `execute`、`name=` 正向、`predicate=`/`advancements=` 负向、网易未验证警告、rawtext 参数槽、投影配置、链 spec、单目标分数比较、传送目的地和配方复用 |
 | `python scripts/export-projection.py --self-test` | 通过；从三格蛇形链生成 `.mcworld` 和 BDS 目录，检查世界容器、关键 LevelDB 文件、命令方块 NBT、起止坐标及 BDS/archive 逐字节一致性 |
-| `python scripts/audit-mcworld.py --self-test` | 通过；合成 `.mcworld` 后检查世界元数据、LevelDB 写前日志、命令方块 NBT、命令提取和 ZIP 路径安全 |
+| `python scripts/audit-mcworld.py --self-test` | 通过；合成 `.mcworld` 后检查世界元数据、LevelDB 写前日志、命令方块 NBT、实体/类型拆分、重复统计和 ZIP 路径安全 |
 | `node scripts/validate-chain-spec.mjs` | 通过；同分互传 spec 无错误，可生成 Markdown 构建表 |
 | `validate-commands.mjs --channel netease` | 通过；未验证命令给警告，纯命令方块中的函数/调度依赖仍被拦截 |
 | `python -B -X utf8 scripts/scan-corpora.py --self-test` | 通过；去重、嵌套 ZIP、DOCX、7z 降级和不可解析文件盘点 |
@@ -33,28 +34,39 @@
 | 敏感信息扫描 | 未发现密钥、令牌、邮箱、手机号、个人绝对路径或口令 |
 | 二进制文件检查 | skill 目录 46 个文件中，45 个 UTF-8 文本通过；唯一二进制是已清洗、固定哈希的 2,828-byte `world-template.level.dat` |
 | 安装目录哈希比对 | 通过；源目录、发布目录和已安装 skill 的 46 个文件逐文件 SHA-256 一致 |
-| ZIP 完整性 | 通过；`v3.2.0` ZIP 共 46 个文件、174,347 bytes，逐文件 SHA-256 与发布目录一致，没有越界路径 |
+| ZIP 完整性 | 通过；`v3.3.0` ZIP 共 46 个文件、176,807 bytes，逐文件 SHA-256 与发布目录一致，没有越界路径 |
 
 ZIP SHA-256：
 
 ```text
-f7df3f16673b642d917075ad5bad9b431b37c368a4074e79bec9d4db869dcd67
+06254069ef3a6142f0dba56082ff3754251ac74aceae0616cc356437fa0d18ab
 ```
 
 GitHub Actions 在每次推送到 `main` 和每个拉取请求中执行脚本语法检查、整包校验、回归测试、语料扫描器自测、已有世界审计自测和配方规划。
 
-## MCWorld 语料审计
+## 语料审计
 
-两份用户提供的网易 `.mcworld` 均完成只读解包、LevelDB 写前日志解析、命令方块实体读取和子区块方块类型回读，没有在世界内执行命令。
+完整私有批次包含 18 个 `.mcworld`、7 个 PhoenixBuilder `.bdx` 和 2 个 TXT。所有文件均只读解析，没有在服务器或世界中执行命令。
 
-| 样本 | 命令方块 | 链 / 循环 / 脉冲 | 非空 / 唯一 | 空命令 | 静态结果 |
-| --- | ---: | --- | --- | ---: | --- |
-| 综合系统世界 | 898 | 679 / 153 / 66 | 877 / 812 | 21 | 14 错误、91 警告 |
-| 商店世界 | 93 | 6 / 65 / 22 | 72 / 52 | 21 | 14 错误、0 警告 |
+| 项目 | 结果 |
+| --- | ---: |
+| `.mcworld` 命令方块实体 | 7,989 |
+| `.bdx` 命令方块 | 1,209 |
+| 合计命令方块实体 | 9,198 |
+| 非空命令 | 8,406 |
+| 空命令 | 792 |
+| 去斜杠后唯一命令 | 3,377 |
+| 无静态错误的命令集合 | 19 / 25 |
+| 错误实例 | 335 |
+| 警告实例 | 682 |
 
-综合系统世界可提炼菜单、经济、玩家事件、状态机和长链组织；商店世界主要作为价格表膨胀、空方块和参数错误的反例。两者都没有原样进入 skill 或 Apache-2.0 发布包。
+审计器区分了 7,530 个可直接确认的 `.mcworld` 物理命令方块、16 个空气坐标孤儿实体和 443 个因 `.ldb` 未解析而类型未知的命令实体。两个地图分别包含 139 和 425 个合法但无命令内容的空方块，证明“空命令方块”是批量模板、预留和复制残留，不是文本解析错误。
 
-审计器能读取 ZIP 根目录结构和 `db/*.log` 写前日志；如果世界只剩 LevelDB `.ldb` 表文件，会明确报错，不把未解析结果当成零命令方块。
+两个生产结构的唯一命令集合完全相同；两个综合指令区共享 968 条唯一命令，同时各有 43 和 69 条差异。跨文件去重因此同时比较文件哈希和命令集合，不只按文件名删除。
+
+7 个 BDX 共包含 18,547,563 个操作和 1,209 个命令方块。BDX 命令可能位于通用 NBT 方块操作，外部结构名不随 BDX 本体提供；原始 BDX 和结构依赖未进入发布包。
+
+审计器能读取 ZIP 根目录结构和 `db/*.log` 写前日志；如果世界只剩 LevelDB `.ldb` 表文件，会明确报错或把实体类型保持未知，不把未解析结果当成零命令方块。
 
 ## 预算检查
 

@@ -491,13 +491,31 @@ def inspect_world(path: Path):
             subchunk_errors.append(f"sequence {sequence}: {error}")
     for block in command_blocks:
         descriptor = block_grid.get(block["position"], {})
-        block["blockType"] = str(unpack_nbt_value(descriptor.get("name"), ""))
+        block_type = str(unpack_nbt_value(descriptor.get("name"), ""))
+        block["blockType"] = block_type or "<unknown>"
     block_type_counts = collections.Counter(
         block["blockType"] or "<unknown>" for block in command_blocks
     )
     key_tags = collections.Counter(key[8] for _, key, _ in all_records if len(key) >= 9)
     commands = [block["command"] for block in command_blocks]
     nonempty_commands = [command for command in commands if command.strip()]
+    normalized_nonempty_commands = [
+        command.strip().lstrip("/") for command in nonempty_commands
+    ]
+    normalized_command_counts = collections.Counter(normalized_nonempty_commands)
+    physical_count = sum(
+        1
+        for block in command_blocks
+        if "command_block" in str(block.get("blockType", ""))
+    )
+    orphan_blocks = sorted(
+        block["position"]
+        for block in command_blocks
+        if block.get("blockType") == "minecraft:air"
+    )
+    unknown_type_count = sum(
+        1 for block in command_blocks if block.get("blockType") == "<unknown>"
+    )
     duplicate_positions = [
         position
         for position, count in collections.Counter(
@@ -586,7 +604,41 @@ def inspect_world(path: Path):
             "count": len(commands),
             "nonEmpty": len(nonempty_commands),
             "unique": len(set(commands)),
+            "uniqueNonEmpty": len(set(nonempty_commands)),
             "empty": sum(1 for command in commands if not command.strip()),
+            "physicalCount": physical_count,
+            "orphanCount": len(orphan_blocks),
+            "orphanPositions": [list(position) for position in orphan_blocks],
+            "unknownTypeCount": unknown_type_count,
+            "emptyPhysical": sum(
+                1
+                for block in command_blocks
+                if "command_block" in str(block.get("blockType", ""))
+                and not block["command"].strip()
+            ),
+            "emptyOrphan": sum(
+                1
+                for block in command_blocks
+                if block.get("blockType") == "minecraft:air"
+                and not block["command"].strip()
+            ),
+            "duplicateSlots": sum(
+                count - 1 for count in normalized_command_counts.values()
+            ),
+            "duplicateRatio": (
+                round(
+                    sum(count - 1 for count in normalized_command_counts.values())
+                    / len(nonempty_commands),
+                    4,
+                )
+                if nonempty_commands
+                else 0
+            ),
+            "topDuplicateCommands": [
+                {"command": command, "count": count}
+                for command, count in normalized_command_counts.most_common(20)
+                if count > 1
+            ],
             "auto": sum(1 for block in command_blocks if block["auto"]),
             "conditional": sum(1 for block in command_blocks if block["conditional"]),
             "delayed": sum(1 for block in command_blocks if block["delay"] > 0),
@@ -651,6 +703,10 @@ def markdown_report(results, output: Path):
                 f"- 命令方块：{command_data['count']}",
                 f"- 唯一命令：{command_data['unique']}",
                 f"- 空命令：{command_data['empty']}",
+                f"- 可确认物理命令方块：{command_data['physicalCount']}",
+                f"- 空气坐标孤儿实体：{command_data['orphanCount']}",
+                f"- 方块类型未知：{command_data['unknownTypeCount']}",
+                f"- 重复槽位：{command_data['duplicateSlots']}（{command_data['duplicateRatio']:.1%}）",
                 f"- 保持开启（auto）：{command_data['auto']}",
                 f"- 有条件：{command_data['conditional']}",
                 f"- 延迟大于 0：{command_data['delayed']}",
@@ -704,6 +760,26 @@ def markdown_report(results, output: Path):
         if command_data["duplicateCommands"]:
             lines.extend(["### 重复命令", "", "```json"])
             lines.append(json.dumps(command_data["duplicateCommands"], ensure_ascii=False, indent=2))
+            lines.extend(["```", ""])
+        if command_data["topDuplicateCommands"]:
+            lines.extend(["### 高频重复命令", "", "```json"])
+            lines.append(
+                json.dumps(
+                    command_data["topDuplicateCommands"],
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
+            lines.extend(["```", ""])
+        if command_data["orphanPositions"]:
+            lines.extend(["### 空气坐标孤儿实体", "", "```json"])
+            lines.append(
+                json.dumps(
+                    command_data["orphanPositions"],
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
             lines.extend(["```", ""])
         if database["parseErrors"]:
             lines.extend(["### 解析异常", "", "```text"])
@@ -807,6 +883,10 @@ def self_test():
         assert result["level"]["levelname"] == "audit-self-test"
         assert result["commands"]["count"] == 2
         assert result["commands"]["nonEmpty"] == 2
+        assert result["commands"]["uniqueNonEmpty"] == 2
+        assert result["commands"]["physicalCount"] == 0
+        assert result["commands"]["unknownTypeCount"] == 2
+        assert result["commands"]["duplicateSlots"] == 0
         assert result["commands"]["missingRunSpace"] == 0
         assert result["database"]["parseErrors"] == []
         assert result["archive"]["unsafePaths"] == []

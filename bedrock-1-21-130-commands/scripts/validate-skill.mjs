@@ -323,6 +323,8 @@ function validateWikiSourceGuide() {
     '6836bfe7ae0fd34b2eb02bd210b201294f614e57',
     'https://github.com/xiaobo121388/netease_mc-ui-skill',
     '5238ee29460792c55db73aaeba3a6a02f1869ba7',
+    'https://github.com/TriM-Organization/BDXConverter',
+    'b3316b6003a297c8d13f693ac40270276eff7565',
     'https://learn.microsoft.com/en-us/minecraft/creator/reference/content/rawmessagejson?view=minecraft-bedrock-stable',
     'https://learn.microsoft.com/en-us/minecraft/creator/documents/moreinfosources?view=minecraft-bedrock-stable',
     'https://learn.microsoft.com/en-us/minecraft/creator/documents/packagingaworldtemplate',
