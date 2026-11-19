@@ -1,7 +1,7 @@
 interface:
   display_name: "NetEase 1.21.130 Command Blocks"
-  short_description: "Build and audit pack-free NetEase China command-block systems."
-  default_prompt: "Use $bedrock-1-21-130-commands to design, validate, or debug a pure command-block system for the NetEase China edition mapped to Bedrock 1.21.130."
+  short_description: "Build, audit, and export NetEase China command-block systems as MCWorld or BDS worlds."
+  default_prompt: "Use $bedrock-1-21-130-commands to design, validate, debug, or export a pure command-block system for NetEase China mapped to Bedrock 1.21.130."
 
 policy:
   allow_implicit_invocation: true

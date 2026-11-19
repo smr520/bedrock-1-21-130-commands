@@ -43,6 +43,9 @@ const BLOCK_TYPES = new Set(['impulse', 'repeat', 'chain']);
 const CONDITIONS = new Set(['unconditional', 'conditional']);
 const REDSTONE = new Set(['always_active', 'needs_redstone']);
 const FACING = new Set(['north', 'south', 'east', 'west', 'up', 'down']);
+const PROJECTION_AXES = new Set(['x', 'z']);
+const PROJECTION_LAYOUTS = new Set(['line', 'serpentine']);
+const PROJECTION_KEYS = new Set(['origin', 'axis', 'layout', 'width', 'worldName', 'spawn', 'buttons']);
 const UNVERIFIED_NETEASE = new Set([
   'camera',
   'inputpermission',
@@ -51,6 +54,8 @@ const UNVERIFIED_NETEASE = new Set([
   'place',
   'recipe',
   'scriptevent',
+  'titleraw',
+  'damage',
   'hud'
 ]);
 const FUNCTION_BOUND = new Set(['function', 'schedule', 'reload']);
@@ -159,11 +164,53 @@ for (const field of ['setup', 'tests', 'notes']) {
     error(`SPEC_${field.toUpperCase()}`, `${field} 必须是字符串数组`);
   }
 }
+if (spec.projection !== undefined) {
+  const projection = spec.projection;
+  if (!projection || typeof projection !== 'object' || Array.isArray(projection)) {
+    error('PROJECTION_OBJECT', 'projection 必须是对象');
+  } else {
+    for (const key of Object.keys(projection)) {
+      if (!PROJECTION_KEYS.has(key)) error('PROJECTION_KEY', `未知 projection 字段: ${key}`);
+    }
+    for (const field of ['origin', 'spawn']) {
+      if (
+        projection[field] !== undefined &&
+        (!Array.isArray(projection[field]) ||
+          projection[field].length !== 3 ||
+          !projection[field].every(Number.isInteger))
+      ) {
+        error('PROJECTION_VECTOR', `projection.${field} 必须是三个整数坐标`);
+      }
+    }
+    if (projection.axis !== undefined && !PROJECTION_AXES.has(projection.axis)) {
+      error('PROJECTION_AXIS', 'projection.axis 只能是 x 或 z');
+    }
+    if (projection.layout !== undefined && !PROJECTION_LAYOUTS.has(projection.layout)) {
+      error('PROJECTION_LAYOUT', 'projection.layout 只能是 line 或 serpentine');
+    }
+    if (
+      projection.width !== undefined &&
+      (!Number.isInteger(projection.width) || projection.width < 1 || projection.width > 512)
+    ) {
+      error('PROJECTION_WIDTH', 'projection.width 必须是 1–512 的整数');
+    }
+    if (projection.worldName !== undefined && !isString(projection.worldName)) {
+      error('PROJECTION_WORLD_NAME', 'projection.worldName 必须是非空字符串');
+    }
+    if (projection.buttons !== undefined && typeof projection.buttons !== 'boolean') {
+      error('PROJECTION_BUTTONS', 'projection.buttons 必须是布尔值');
+    }
+  }
+}
 if (!Array.isArray(spec.blocks) || spec.blocks.length === 0) {
   error('SPEC_BLOCKS', 'blocks 必须是非空数组');
 }
 
 const blocks = Array.isArray(spec.blocks) ? spec.blocks : [];
+const positioned = blocks.filter(block => block && Array.isArray(block.pos)).length;
+if (positioned > 0 && positioned !== blocks.length) {
+  error('MIXED_POSITIONS', '导出投影时，所有 block 要么都写 pos，要么都不写 pos');
+}
 const byId = new Map();
 for (const block of blocks) {
   if (!block || typeof block !== 'object' || Array.isArray(block)) {
@@ -361,6 +408,22 @@ function markdownPlan() {
     `- Target: ${spec.targetVersion || '1.21.130'}`,
     `- Blocks: ${ordered.length}`,
     '',
+  ];
+  if (spec.projection && typeof spec.projection === 'object') {
+    const projection = spec.projection;
+    lines.push(
+      '## Projection',
+      '',
+      `- Origin: ${(projection.origin || [0, 4, 0]).join(' ')}`,
+      `- Layout: ${projection.layout || 'serpentine'}`,
+      `- Axis: ${projection.axis || 'x'}`,
+      `- Width: ${projection.width ?? 64}`,
+      `- Spawn: ${(projection.spawn || []).join(' ') || '(automatic)'}`,
+      `- Buttons: ${projection.buttons ?? true}`,
+      ''
+    );
+  }
+  lines.push(
     '## Setup',
     '',
     '```text',
@@ -385,7 +448,7 @@ function markdownPlan() {
     ...((Array.isArray(spec.tests) && spec.tests.length) ? spec.tests.map(test => `- ${test}`) : ['- Add manual tests before deployment.']),
     '',
     'Static validation only; target-client execution is still required.'
-  ];
+  );
   return lines.join('\n') + '\n';
 }
 

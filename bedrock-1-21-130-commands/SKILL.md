@@ -1,8 +1,8 @@
 ---
 name: bedrock-1-21-130-commands
-description: 编写、现代化、排错和审计 Minecraft 网易中国版 3.10 / BE 1.21.130 的纯指令命令方块系统，并提供国际版 1.21.130 兼容核对；覆盖菜单、商店、奖励、计时、多人配对、数据化 HUD、FMBE/MBE、状态机、旧语法转换、执行分叉预算和减少命令方块。
+description: 编写、现代化、排错和审计 Minecraft 网易中国版 3.10 / BE 1.21.130 的纯指令命令方块系统，并可导出带起止坐标的 .mcworld 或 BDS 世界目录；覆盖菜单、奖励、计时、多人配对、数据化 HUD、FMBE/MBE、状态机、旧语法转换、执行分叉预算和减少命令方块。
 metadata:
-  version: "2.1.0"
+  version: "3.0.0"
   author: "一个高质量的神秘人"
   github: "smr520"
   qq_group: "1031096520"
@@ -17,6 +17,7 @@ metadata:
 - 默认渠道是网易中国版 3.10 / BE 1.21.130；先查网易官方命令列表和目标客户端 `/help`，不要因为国际版页面存在就直接认定网易可用。
 - 运行环境只使用原版命令、命令方块、红石及原版实体和方块。
 - 默认不生成或依赖行为包、资源包、插件、脚本、`.mcfunction`、`manifest.json`、`tick.json` 或 `.mcpack`。
+- 用户需要投影时，可把已验证的纯命令方块 spec 导出为 `.mcworld` 或 BDS 世界目录；导出文件仍只包含世界元数据、LevelDB、命令方块、按钮和坐标清单，不加入行为包或函数。
 - 网易命令表里存在 `/function`、`/schedule` 和 `/reload`，但它们依赖 Add-on 函数。当前纯命令方块边界内不使用它们代替方块链；只有用户明确改变范围时才切换交付类型。
 - 默认允许一次性准备命令在聊天栏执行并记为 **0 个命令方块**。用户说“全部用方块”“只用方块初始化”时，再增加脉冲根和按钮并把它们计入总数。
 - 用户要求、已在网易目标客户端确认的事实和已测原版语法优先于旧教程和外部合集。合集只用于发现模式，不是可直接执行的指令。
@@ -77,7 +78,8 @@ metadata:
 4. **写命令**：动作型命令使用 1.19.50+ 的 `execute ... run`；只检测条件时允许以完整 `if/unless` 结尾。先改状态会破坏后续选择器时，先用 `tag` 固定对象。
 5. **核对预算**：统计每个命令方块和每次触发的执行分叉，不计聊天栏准备命令；说明删掉的装饰和保留的保护格。
 6. **静态检查**：运行命令、链级、NetEase 可用性、spec 和整包校验，修掉旧语法、Java 参数、坏 JSON、全角符号、`if score` 多目标比较和传送多目标目的地。
-7. **列实机测试**：覆盖成功、失败、边界、重复触发、多人、离开加载区、重进和清理路径。静态通过后仍标为 `static-only`。
+7. **导出投影**：用户需要 `.mcworld`、BDS 或精确命令区坐标时，读取 [projection-export.md](references/projection-export.md)，从同一份 spec 生成世界文件；文件名和 `projection.json` 必须同时记录起止坐标。
+8. **列实机测试**：覆盖成功、失败、边界、重复触发、多人、离开加载区、重进和清理路径。静态通过后仍标为 `static-only`。
 
 ## 完整交付格式
 
@@ -90,6 +92,7 @@ metadata:
 5. 正常路径、失败路径、多人路径和加载/重进测试。
 6. 执行分叉预算：来源数、目标数、触发频率和最大实例数。
 7. 纯指令做不到的状态，或为了减少方块而接受的可见差异。
+8. 投影交付时给出 `.mcworld`、BDS 目录、起点、终点、尺寸、世界名和导入路径。
 
 方块标注统一使用：
 
@@ -155,6 +158,18 @@ node (Join-Path $skillRoot "scripts\validate-chain-spec.mjs") <文件.json> --wr
 node (Join-Path $skillRoot "scripts\validate-commands.mjs") <文件.txt|文件.md> --channel netease
 ```
 
+从 chain spec 生成 `.mcworld` 与 BDS 世界目录：
+
+```powershell
+python -B -X utf8 (Join-Path $skillRoot "scripts\export-projection.py") <spec.json> --outdir <输出目录>
+```
+
+验证投影导出器的正向、世界容器和 BDS 目录一致性：
+
+```powershell
+python -B -X utf8 (Join-Path $skillRoot "scripts\export-projection.py") --self-test
+```
+
 验证脚本自身的正向、负向和严格模式行为：
 
 ```powershell
@@ -183,6 +198,7 @@ node (Join-Path $skillRoot "scripts\plan-recipes.mjs") player-hud shop-single-op
 - 网易命令表存在 `/schedule` 不代表纯命令方块可以独立调度；没有 Add-on 函数文件时不能依赖它。同理，`/function` 和 `/reload` 不进入默认交付。
 - FMBE/MBE 是实体加客户端动画的显示层，不是方块实体或真实碰撞体。必须报告实体数量、固定位置、刷新频率和截图校准需求。
 - 数据化 RPG 的生命、攻击、防御等数值仍是自建 `dummy` 状态。普通原版攻击不会自动把真实伤害写入分数；“真实受击”技巧属于网易渠道观察项，必须在目标客户端逐项实测。
+- `.mcworld` 是可直接导入的 ZIP 世界容器；BDS 使用解压后的同一套 `level.dat + db/ + levelname.txt` 目录。静态回读通过不等于目标网易客户端或 BDS 已成功加载。
 
 ## 参考资料路由
 
@@ -190,6 +206,7 @@ node (Join-Path $skillRoot "scripts\plan-recipes.mjs") player-hud shop-single-op
 | --- | --- |
 | 命令方块类型、延迟、条件、排错 | [command-blocks.md](references/command-blocks.md) |
 | 复杂系统的行为契约、状态表、计算模型和不变量 | [command-model.md](references/command-model.md) |
+| `.mcworld`、BDS、起止坐标、自动布局和投影导入 | [projection-export.md](references/projection-export.md) |
 | 网易 1.21.130 命令边界、证据等级和高级纯指令能力 | [netease-1.21.130.md](references/netease-1.21.130.md) |
 | FMBE/MBE、数据化 RPG、武器触发、UID 和大型网易地图 | [netease-advanced.md](references/netease-advanced.md) |
 | 用户网易语料的匿名模式、旧图迁移和反模式 | [netease-corpus-patterns.md](references/netease-corpus-patterns.md) |
@@ -206,4 +223,4 @@ node (Join-Path $skillRoot "scripts\plan-recipes.mjs") player-hud shop-single-op
 | 国际版与网易 ID、能力边界 | [channel-matrix.md](references/channel-matrix.md) |
 | 可继续实现的系统和建议预算 | [system-ideas.md](references/system-ideas.md) |
 
-完整可复制示例在 [examples/README.md](examples/README.md)，包括雪球菜单、商店、撤离、玩家 HUD、条件 T 显和欢迎公告。优先读取与当前需求最接近的单个示例，不要一次加载全部资料。
+完整可复制示例在 [examples/README.md](examples/README.md)，包括雪球菜单、商店、撤离、玩家 HUD、条件 T 显、世界投影和欢迎公告。优先读取与当前需求最接近的单个示例，不要一次加载全部资料。

@@ -2,6 +2,31 @@
 
 本项目遵循语义化版本。发布版级差异记录在这里。
 
+## 3.0.0 - 2026-11-19
+
+### Added
+
+- 新增 `export-projection.py`：从 chain spec 直接生成带真实命令方块 NBT 的 `.mcworld` 和 BDS 世界目录。
+- `.mcworld`、BDS 目录和所有 sidecar 文件名自动追加 `start_x_y_z` / `end_x_y_z`；`levelname.txt` 与内嵌 `projection.json` 也记录相同起止坐标。
+- `projection.json` 同时记录命令区边界、按钮视觉边界、世界出生点、每个命令方块的位置/朝向/条件/红石/延迟/命令/后继和模板哈希。
+- chain spec 新增 `projection` 配置，支持 origin、X/Z 轴、单线/蛇形布局、宽度、世界名、出生点和红石按钮。
+- 自动布局会按 `next` 推导朝向，末端朝上，避免意外形成反向链；显式坐标必须整份 spec 全覆盖。
+- 新增已清洗的 `world-template.level.dat`，保留网易基岩世界必要元数据，去掉名称、种子、时间戳、玩家/世界标识和原始区块。
+- 新增 MCWorld/BDS 导出参考、示例、模板来源和 SHA-256 文档。
+
+### Changed
+
+- `.mcworld` 输出遵循 ZIP 根目录世界结构；BDS 输出是同一组 `level.dat + db/ + levelname.txt` 文件的解压目录。
+- 导出仍保持纯命令方块边界，不添加行为包、资源包、函数、脚本或 `tick.json`。
+- 导入兼容性保留 `runtime-unverified`：当前环境没有网易客户端或实际 BDS。
+- 版本号升为 3.0.0，因为交付产物从命令清单扩展到可导入世界文件。
+
+### Validation
+
+- 新增投影导出器自测：命令 spec 校验、世界容器、关键 LevelDB 文件、命令方块 NBT 数量、起止坐标和 BDS/archive 逐字节一致性。
+- GitHub Actions 新增 MCWorld/BDS 导出自测。
+- 保留上一版条件 T 显、命令、链、配方、来源和敏感信息检查。
+
 ## 2.1.0 - 2026-11-19
 
 ### Added

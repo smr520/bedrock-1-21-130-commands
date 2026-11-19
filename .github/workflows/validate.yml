@@ -49,5 +49,8 @@ jobs:
       - name: Test corpus scanner
         run: python -B -X utf8 scripts/scan-corpora.py --self-test
 
+      - name: Test MCWorld and BDS projection export
+        run: python -B -X utf8 scripts/export-projection.py --self-test
+
       - name: Validate recipe planning
         run: node scripts/plan-recipes.mjs server-starter-core player-hud hud-arbiter

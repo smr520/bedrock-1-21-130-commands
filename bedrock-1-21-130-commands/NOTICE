@@ -16,6 +16,11 @@ MinecraftBE-Command-Building-Skill
 https://github.com/yixin-amore/MinecraftBE-Command-Building-Skill
 Audited commit: 9184e4d36c4df62a8fc4e2be951bd9163dd8196a
 
+The sanitized world metadata template at
+assets/world-template.level.dat was derived from the upstream
+scripts/_template.mcworld at the audited commit. Names, identifiers, seed,
+timestamps and spawn values were reset before inclusion.
+
 MIT License
 
 Copyright (c) 2026 yixin-amore

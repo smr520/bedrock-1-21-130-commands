@@ -5,6 +5,7 @@
  */
 
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -55,6 +56,7 @@ function safeRuntimeFiles() {
     'references/command-blocks.md',
     'references/commands.md',
     'references/netease-1.21.130.md',
+    'references/projection-export.md',
     'references/selectors-and-scoreboard.md',
     'references/shared-core.md',
     'references/system-ideas.md',
@@ -318,6 +320,8 @@ function validateWikiSourceGuide() {
     '9184e4d36c4df62a8fc4e2be951bd9163dd8196a',
     'https://learn.microsoft.com/en-us/minecraft/creator/reference/content/rawmessagejson?view=minecraft-bedrock-stable',
     'https://learn.microsoft.com/en-us/minecraft/creator/documents/moreinfosources?view=minecraft-bedrock-stable',
+    'https://learn.microsoft.com/en-us/minecraft/creator/documents/packagingaworldtemplate',
+    'https://learn.microsoft.com/en-us/minecraft/creator/documents/differencesbetweenbedrockandjava?view=minecraft-bedrock-experimental',
     'https://wiki.bedrock.dev/llms.txt',
     'https://minecraft.wiki/w/Commands',
     'CC BY-NC-SA 3.0'
@@ -382,6 +386,24 @@ function validateExampleStructure(relativePath) {
   }
 }
 
+function validateWorldTemplate() {
+  const relativePath = 'assets/world-template.level.dat';
+  const absolutePath = path.join(root, relativePath);
+  if (!fs.existsSync(absolutePath)) {
+    fail(relativePath, 0, '缺少世界元数据模板');
+    return;
+  }
+  const data = fs.readFileSync(absolutePath);
+  const digest = crypto.createHash('sha256').update(data).digest('hex');
+  const expected = 'fed9ce5d3dc1c5fc236288263ffa9b5bd55d8a1b53c46675e5db690324f42c92';
+  if (digest !== expected) fail(relativePath, 0, `模板 SHA-256 不匹配: ${digest}`);
+  if (data.length !== 2828) fail(relativePath, 0, `模板大小应为 2828 bytes，实际 ${data.length}`);
+  const documentation = read('assets/WORLD_TEMPLATE.md');
+  if (!documentation.includes(expected)) {
+    fail('assets/WORLD_TEMPLATE.md', 0, '模板文档缺少实际 SHA-256');
+  }
+}
+
 validateFrontmatter();
 for (const file of safeRuntimeFiles()) runCommandValidator(file);
 runChainValidator();
@@ -390,6 +412,7 @@ validateChainSpecs();
 validateChainSpecSchema();
 validateReferenceRouting();
 validateWikiSourceGuide();
+validateWorldTemplate();
 for (const file of markdownFiles()) {
   validateMarkdownLinks(file);
   validateExampleStructure(file);
@@ -400,6 +423,7 @@ if (!quiet) {
   console.log(`运行时文档已校验: ${safeRuntimeFiles().length}`);
   console.log(`Markdown 内部链接已校验: ${markdownFiles().length}`);
   console.log('结构化链 spec 已校验: examples/*.spec.json');
+  console.log('投影世界模板已校验: assets/world-template.level.dat');
   console.log('说明: legacy-to-modern.md 故意包含错误旧语法，不按可直接运行文件整体校验。');
 }
 

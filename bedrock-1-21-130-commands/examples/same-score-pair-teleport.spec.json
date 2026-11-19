@@ -4,6 +4,22 @@
   "channel": "netease-china",
   "targetVersion": "1.21.130",
   "commandsOnly": true,
+  "projection": {
+    "origin": [
+      0,
+      4,
+      0
+    ],
+    "axis": "x",
+    "layout": "line",
+    "worldName": "同分互传测试",
+    "spawn": [
+      2,
+      6,
+      0
+    ],
+    "buttons": true
+  },
   "setup": [
     "scoreboard objectives add pair_score dummy",
     "scoreboard players set A pair_score 1",

@@ -13,6 +13,7 @@
 | `player-hud.md` | 1 格玩家状态动作栏，直接读取多个分数 |
 | `hud-arbiter.md` | 3 格 HUD 仲裁层：菜单优先于撤离，撤离优先于普通状态；不含被接入系统的状态与动作块 |
 | `conditional-rawtext.md` | 1 格条件 T 显：用 `%%2` 参数槽按分数只显示命中的状态文字 |
+| `world-export.md` | 从 chain spec 生成 `.mcworld` 和 BDS 目录，文件名及清单自动带起止坐标 |
 | `same-score-pair-teleport.md` | 1 格同分双人互传：双重遍历比较单个目标，同一按钮按触发者传送 |
 | `same-score-pair-teleport.spec.json` | 同分互传的机器可读链 spec，可检查拓扑并生成构建表 |
 

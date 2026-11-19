@@ -8,34 +8,36 @@
 | --- | --- |
 | Node.js | 24.19.0，校验脚本仅使用标准库 |
 | Python | 3.12；扫描器仅使用标准库和可选解析器，`quick_validate.py` 使用 PyYAML 6.0.3 |
-| Minecraft 客户端 | 当前环境未安装 |
+| Minecraft 客户端 / BDS | 当前环境均未安装 |
 | 默认目标 | 网易中国版 V3.10 / BE1.21.130，纯命令方块 |
 | 兼容目标 | 国际版 Minecraft Bedrock 1.21.130 |
 | 网易来源核对 | 2026-11-16 在线核对网易 3.10 更新页、官方命令列表和常用命令页 |
-| Wiki 来源核对 | 2026-11-19 核对 Microsoft Learn 原始文本 JSON、官方来源页、Bedrock Wiki、Minecraft Wiki、Mojira、MC百科和外部仓库提交 `9184e4d36c4df62a8fc4e2be951bd9163dd8196a` 的用途及许可边界 |
+| Wiki 来源核对 | 2026-11-19 核对 Microsoft Learn 原始文本 JSON、世界模板与 LevelDB 格式、官方来源页、Bedrock Wiki、Minecraft Wiki、Mojira、MC百科和外部仓库提交 `9184e4d36c4df62a8fc4e2be951bd9163dd8196a` 的用途及许可边界 |
 
 ## 自动检查
 
 | 检查 | 结果 |
 | --- | --- |
 | skill-creator `quick_validate.py` | 通过；frontmatter、名称和未完成脚手架检查 |
-| `node scripts/validate-skill.mjs` | 通过；22 份运行时文档、26 份 Markdown 内部链接、入口路由、网易与 Wiki 关键来源、命令语法、rawtext 参数槽、链结构、JSON schema、链 spec、配方注册表和 CB 声明一致 |
-| `node scripts/selftest.mjs` | 通过；校验器正向、负向、严格模式、动作型与纯条件型 `execute`、网易未验证警告、rawtext 参数槽、链 spec、单目标分数比较、传送目的地和配方复用 |
+| `node scripts/validate-skill.mjs` | 通过；24 份运行时文档、28 份 Markdown 内部链接、入口路由、网易与 Wiki 关键来源、命令语法、rawtext 参数槽、链结构、JSON schema、世界模板、链 spec、配方注册表和 CB 声明一致 |
+| `node scripts/selftest.mjs` | 通过；校验器正向、负向、严格模式、动作型与纯条件型 `execute`、网易未验证警告、rawtext 参数槽、投影配置、链 spec、单目标分数比较、传送目的地和配方复用 |
+| `python scripts/export-projection.py --self-test` | 通过；从三格蛇形链生成 `.mcworld` 和 BDS 目录，检查世界容器、关键 LevelDB 文件、命令方块 NBT、起止坐标及 BDS/archive 逐字节一致性 |
 | `node scripts/validate-chain-spec.mjs` | 通过；同分互传 spec 无错误，可生成 Markdown 构建表 |
 | `validate-commands.mjs --channel netease` | 通过；未验证命令给警告，纯命令方块中的函数/调度依赖仍被拦截 |
 | `python -B -X utf8 scripts/scan-corpora.py --self-test` | 通过；去重、嵌套 ZIP、DOCX、7z 降级和不可解析文件盘点 |
 | Node.js `--check` | 6 个 `.mjs` 脚本全部通过语法检查 |
+| Python 语法与自测 | 2 个 `.py` 脚本通过语法检查；语料扫描器和投影导出器自测通过 |
 | JSON / YAML 解析 | skill 内全部 JSON、发布仓库内 5 个 GitHub YAML 全部通过解析 |
 | UTF-8 完整性 | 所有发布文本不含 `U+FFFD`；校验器新增负向回归用例 |
 | 敏感信息扫描 | 未发现密钥、令牌、邮箱、手机号、个人绝对路径或口令 |
-| 二进制文件检查 | skill 目录 39 个文件全部为 UTF-8 文本，不包含二进制资产或 NUL 字节 |
-| 安装目录哈希比对 | 通过；源目录、发布目录和已安装 skill 的 39 个文件逐文件 SHA-256 一致 |
-| ZIP 完整性 | 通过；`v2.1.0` ZIP 共 39 个文件、138,572 bytes，逐文件 SHA-256 与发布目录一致，没有越界路径 |
+| 二进制文件检查 | skill 目录 44 个文件中，43 个 UTF-8 文本通过；唯一二进制是已清洗、固定哈希的 2,828-byte `world-template.level.dat` |
+| 安装目录哈希比对 | 通过；源目录、发布目录和已安装 skill 的 44 个文件逐文件 SHA-256 一致 |
+| ZIP 完整性 | 通过；`v3.0.0` ZIP 共 44 个文件、158,907 bytes，逐文件 SHA-256 与发布目录一致，没有越界路径 |
 
 ZIP SHA-256：
 
 ```text
-135cca7345ee271c2b1387c79fe90732e9642b1ebc4a4defcc487c43d7aaef75
+502beff0ad336c8616cb590dffa98d63d40a96b6729d0058c48396e1b37b9c81
 ```
 
 GitHub Actions 在每次推送到 `main` 和每个拉取请求中执行脚本语法检查、整包校验、回归测试、语料扫描器自测和配方规划。

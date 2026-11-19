@@ -51,3 +51,13 @@ C1【脉冲｜无条件｜需要红石｜延迟0】
 | B 离线，A 触发 | 不传送 |
 | A 在按钮附近，B 距离较远 | 传送到 B 位置 |
 | A、B 同时挤在按钮旁 | `@p` 可能选错触发方，不保证方向 |
+
+## 导出为世界
+
+对应 spec 已包含 `projection` 配置，可直接生成 `.mcworld` 和 BDS 目录：
+
+```powershell
+python -B -X utf8 scripts\export-projection.py examples\same-score-pair-teleport.spec.json --outdir build\exports
+```
+
+命令区起点和终点都是 `0 4 0`；名称会写成 `same-score-pair-teleport__start_0_4_0__end_0_4_0`。石按钮位于 `0 5 0`，世界出生点为 `2 6 0`。完整规则见 [world-export.md](world-export.md)。

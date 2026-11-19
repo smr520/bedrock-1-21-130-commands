@@ -330,6 +330,57 @@ try {
     '没有链头的 chain spec 应失败'
   );
 
+  const invalidProjectionSpec = writeFixture(
+    'invalid-projection-spec.json',
+    JSON.stringify({
+      name: 'invalid-projection',
+      channel: 'netease-china',
+      targetVersion: '1.21.130',
+      commandsOnly: true,
+      projection: { axis: 'diagonal' },
+      blocks: [
+        {
+          id: 'B1',
+          type: 'impulse',
+          command: 'say invalid projection',
+          next: null
+        }
+      ]
+    })
+  );
+  const invalidProjectionResult = run('validate-chain-spec.mjs', [invalidProjectionSpec]);
+  expectStatus(invalidProjectionResult, 1, '非法 projection.axis 应失败');
+  assert.match(invalidProjectionResult.stdout, /PROJECTION_AXIS/);
+
+  const mixedPositionsSpec = writeFixture(
+    'mixed-positions-spec.json',
+    JSON.stringify({
+      name: 'mixed-positions',
+      channel: 'netease-china',
+      targetVersion: '1.21.130',
+      commandsOnly: true,
+      blocks: [
+        {
+          id: 'B1',
+          type: 'impulse',
+          command: 'say first',
+          next: 'B2',
+          pos: [0, 4, 0],
+          facing: 'east'
+        },
+        {
+          id: 'B2',
+          type: 'chain',
+          command: 'say second',
+          next: null
+        }
+      ]
+    })
+  );
+  const mixedPositionsResult = run('validate-chain-spec.mjs', [mixedPositionsSpec]);
+  expectStatus(mixedPositionsResult, 1, '部分 block 写 pos 时应失败');
+  assert.match(mixedPositionsResult.stdout, /MIXED_POSITIONS/);
+
   const planner = run('plan-recipes.mjs', ['server-starter-core', 'player-hud', '--json']);
   expectStatus(planner, 0, '配方计划器应通过');
   const plan = JSON.parse(planner.stdout);
@@ -341,7 +392,17 @@ try {
   const unknownRecipe = run('plan-recipes.mjs', ['not-a-recipe', '--json']);
   expectStatus(unknownRecipe, 1, '未知配方应失败');
 
-  console.log('通过: 校验器正向、负向、严格模式、命令语法、rawtext 参数槽、spec、单目标分数比较、传送目的地和配方复用测试。');
+  const python = process.platform === 'win32' ? 'python' : 'python3';
+  const projectionExport = spawnSync(
+    python,
+    ['-B', '-X', 'utf8', path.join(scriptDir, 'export-projection.py'), '--self-test'],
+    { encoding: 'utf8' }
+  );
+  expectStatus(projectionExport, 0, 'MCWorld/BDS 投影导出器自测应通过');
+
+  console.log(
+    '通过: 校验器正向、负向、严格模式、命令语法、rawtext 参数槽、spec、投影导出、单目标分数比较、传送目的地和配方复用测试。'
+  );
 } catch (error) {
   console.error(`✖ selftest: ${error.message}`);
   process.exitCode = 1;

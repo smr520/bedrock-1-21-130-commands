@@ -17,6 +17,8 @@ The declarative chain-spec workflow and several command-system review ideas were
 
 The original project contains material for NetEase China, command generation, BDX, building, display entities, and other research assets. This release does not redistribute its archives, generated worlds, images, building generators, command corpora, or full reference text. The included Node.js schema and validator were rewritten for this project, and the documentation was rewritten around the project's NetEase-first, pure command-block scope.
 
+The file `bedrock-1-21-130-commands/assets/world-template.level.dat` is a sanitized derivative of `scripts/_template.mcworld` from the project. The exporter replaces the world name, spawn, game settings, seed and timestamps; generated chunks and command blocks do not come from the upstream template. Its SHA-256 is recorded in `assets/WORLD_TEMPLATE.md`.
+
 MIT License
 
 Copyright (c) 2026 yixin-amore

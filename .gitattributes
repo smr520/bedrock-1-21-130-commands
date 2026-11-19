@@ -1,3 +1,6 @@
 * text=auto eol=lf
 
 *.zip binary
+*.mcworld binary
+*.mcstructure binary
+*.level.dat binary
