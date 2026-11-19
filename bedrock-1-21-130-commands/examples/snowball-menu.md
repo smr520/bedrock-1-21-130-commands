@@ -2,6 +2,8 @@
 
 命令方块总数：11 个。菜单用一格统一显示全部选项和当前编号，抬头确认、低头关闭；不再为每个选项各放一格显示。
 
+菜单生命周期、取消路径和多设备验收见 [command-ui-playbook.md](../references/command-ui-playbook.md)。
+
 ## 准备：聊天栏执行一次
 
 ```text

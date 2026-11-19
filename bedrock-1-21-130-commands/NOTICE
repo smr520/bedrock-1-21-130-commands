@@ -21,6 +21,15 @@ assets/world-template.level.dat was derived from the upstream
 scripts/_template.mcworld at the audited commit. Names, identifiers, seed,
 timestamps and spawn values were reset before inclusion.
 
+The following repositories were audited for error patterns and interaction
+principles only. No command tables, JSON UI templates, images, or Python/API
+implementations were copied from them:
+
+- xiaobo121388/mc-bedrock-commands-skill
+  commit 6836bfe7ae0fd34b2eb02bd210b201294f614e57
+- xiaobo121388/netease_mc-ui-skill
+  commit 5238ee29460792c55db73aaeba3a6a02f1869ba7
+
 MIT License
 
 Copyright (c) 2026 yixin-amore

@@ -92,6 +92,34 @@ try {
   );
   expectStatus(run('validate-commands.mjs', [invalidCommand, '--quiet']), 1, '旧 execute 应失败');
 
+  const namedEntitySelector = writeFixture(
+    'named-entity-selector.txt',
+    '/execute as @e[name="Bob"] run say selected\n'
+  );
+  expectStatus(
+    run('validate-commands.mjs', [namedEntitySelector, '--quiet']),
+    0,
+    '按 name 精确筛选实体应通过'
+  );
+
+  const predicateSelector = writeFixture(
+    'predicate-selector.txt',
+    '/execute as @e[predicate=test] run say invalid\n'
+  );
+  const predicateSelectorResult = run('validate-commands.mjs', [predicateSelector]);
+  expectStatus(predicateSelectorResult, 1, 'Java predicate 选择器参数应失败');
+  assert.match(predicateSelectorResult.stdout, /Java 参数 predicate=/);
+
+  const advancementsSelector = writeFixture(
+    'advancements-selector.txt',
+    '/execute as @a[advancements={story/root=true}] run say invalid\n'
+  );
+  expectStatus(
+    run('validate-commands.mjs', [advancementsSelector, '--quiet']),
+    1,
+    'Java advancements 选择器参数应失败'
+  );
+
   const conditionOnlyBlock = writeFixture(
     'condition-only-block.txt',
     '/execute if block ~ ~-1 ~ stone\n'
@@ -401,7 +429,7 @@ try {
   expectStatus(projectionExport, 0, 'MCWorld/BDS 投影导出器自测应通过');
 
   console.log(
-    '通过: 校验器正向、负向、严格模式、命令语法、rawtext 参数槽、spec、投影导出、单目标分数比较、传送目的地和配方复用测试。'
+    '通过: 校验器正向、负向、严格模式、命令语法、Java 选择器参数、rawtext 参数槽、spec、投影导出、单目标分数比较、传送目的地和配方复用测试。'
   );
 } catch (error) {
   console.error(`✖ selftest: ${error.message}`);

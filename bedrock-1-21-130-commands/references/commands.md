@@ -14,6 +14,25 @@
 
 完整证据矩阵见 [netease-1.21.130.md](netease-1.21.130.md)。
 
+## 命令事实记录
+
+新增或引用一条命令前，至少记录：
+
+| 字段 | 用途 |
+| --- | --- |
+| `signature` | 目标版本可直接填入参数的规范语法 |
+| `aliases` | 仅在目标渠道验证过的同义命令；名字相近不算别名 |
+| `scope` | 原版命令方块、BDS 控制台、Owner/管理员、Education、Editor、ModAPI 或 Java |
+| `addedVersion` | 首次出现的基岩版本；没有证据就不猜 |
+| `permissionLevel` / `requiresCheats` | 进入命令方块前必须满足的权限门禁 |
+| `channelEvidence` | `official`、`client-confirmed`、`international-cross-check`、`corpus-observed` 或 `unverified` |
+| `sourceUrl` | 可追溯的官方页面或固定版本源码 |
+| `clientTest` | 网易客户端设备、命令方块上下文、成功数或失败结果 |
+
+`tp`/`teleport`、`tell`/`msg`/`w` 等已知别名也要使用同一份签名。`op`、`deop`、`ops`、`permission` 这类名字相近的命令必须分别核验，不能因为外部百科把它们放在同一页就当成同义关系。
+
+以下内容不属于默认纯命令方块范围：BDS 控制台命令、Owner/服务器管理命令、Education Agent、Editor `/project`、ModAPI `SetCommand`、Java-only 参数和需要资源包/脚本的 UI 调用。它们可以在“范围外对照”中解释，不能混入可直接搭建的方块链。
+
 ## 通用语法
 
 - 坐标：绝对 `100 64 -20`；相对 `~ ~1 ~`；局部 `^ ^ ^3`。

@@ -12,15 +12,15 @@
 | 默认目标 | 网易中国版 V3.10 / BE1.21.130，纯命令方块 |
 | 兼容目标 | 国际版 Minecraft Bedrock 1.21.130 |
 | 网易来源核对 | 2026-11-16 在线核对网易 3.10 更新页、官方命令列表和常用命令页 |
-| Wiki 来源核对 | 2026-11-19 核对 Microsoft Learn 原始文本 JSON、世界模板与 LevelDB 格式、官方来源页、Bedrock Wiki、Minecraft Wiki、Mojira、MC百科和外部仓库提交 `9184e4d36c4df62a8fc4e2be951bd9163dd8196a` 的用途及许可边界 |
+| Wiki 来源核对 | 2026-11-19 核对 Microsoft Learn、Bedrock Wiki、Minecraft Wiki、Mojira、MC百科，以及外部提交 `9184e4d36c4df62a8fc4e2be951bd9163dd8196a`、`6836bfe7ae0fd34b2eb02bd210b201294f614e57`、`5238ee29460792c55db73aaeba3a6a02f1869ba7` 的用途和许可边界 |
 
 ## 自动检查
 
 | 检查 | 结果 |
 | --- | --- |
 | skill-creator `quick_validate.py` | 通过；frontmatter、名称和未完成脚手架检查 |
-| `node scripts/validate-skill.mjs` | 通过；24 份运行时文档、28 份 Markdown 内部链接、入口路由、网易与 Wiki 关键来源、命令语法、rawtext 参数槽、链结构、JSON schema、世界模板、链 spec、配方注册表和 CB 声明一致 |
-| `node scripts/selftest.mjs` | 通过；校验器正向、负向、严格模式、动作型与纯条件型 `execute`、网易未验证警告、rawtext 参数槽、投影配置、链 spec、单目标分数比较、传送目的地和配方复用 |
+| `node scripts/validate-skill.mjs` | 通过；25 份运行时文档、29 份 Markdown 内部链接、入口路由、网易与 Wiki 关键来源、命令语法、Java 选择器参数、rawtext 参数槽、纯命令 UI、链结构、JSON schema、世界模板、链 spec、配方注册表和 CB 声明一致 |
+| `node scripts/selftest.mjs` | 通过；校验器正向、负向、严格模式、动作型与纯条件型 `execute`、`name=` 正向、`predicate=`/`advancements=` 负向、网易未验证警告、rawtext 参数槽、投影配置、链 spec、单目标分数比较、传送目的地和配方复用 |
 | `python scripts/export-projection.py --self-test` | 通过；从三格蛇形链生成 `.mcworld` 和 BDS 目录，检查世界容器、关键 LevelDB 文件、命令方块 NBT、起止坐标及 BDS/archive 逐字节一致性 |
 | `node scripts/validate-chain-spec.mjs` | 通过；同分互传 spec 无错误，可生成 Markdown 构建表 |
 | `validate-commands.mjs --channel netease` | 通过；未验证命令给警告，纯命令方块中的函数/调度依赖仍被拦截 |
@@ -30,14 +30,14 @@
 | JSON / YAML 解析 | skill 内全部 JSON、发布仓库内 5 个 GitHub YAML 全部通过解析 |
 | UTF-8 完整性 | 所有发布文本不含 `U+FFFD`；校验器新增负向回归用例 |
 | 敏感信息扫描 | 未发现密钥、令牌、邮箱、手机号、个人绝对路径或口令 |
-| 二进制文件检查 | skill 目录 44 个文件中，43 个 UTF-8 文本通过；唯一二进制是已清洗、固定哈希的 2,828-byte `world-template.level.dat` |
-| 安装目录哈希比对 | 通过；源目录、发布目录和已安装 skill 的 44 个文件逐文件 SHA-256 一致 |
-| ZIP 完整性 | 通过；`v3.0.0` ZIP 共 44 个文件、158,907 bytes，逐文件 SHA-256 与发布目录一致，没有越界路径 |
+| 二进制文件检查 | skill 目录 45 个文件中，44 个 UTF-8 文本通过；唯一二进制是已清洗、固定哈希的 2,828-byte `world-template.level.dat` |
+| 安装目录哈希比对 | 通过；源目录、发布目录和已安装 skill 的 45 个文件逐文件 SHA-256 一致 |
+| ZIP 完整性 | 通过；`v3.1.0` ZIP 共 45 个文件、163,600 bytes，逐文件 SHA-256 与发布目录一致，没有越界路径 |
 
 ZIP SHA-256：
 
 ```text
-502beff0ad336c8616cb590dffa98d63d40a96b6729d0058c48396e1b37b9c81
+a0e0772451cf9de51ef930f69eeb0ff5628238d6b1f6fd5a88c3dffa094089bc
 ```
 
 GitHub Actions 在每次推送到 `main` 和每个拉取请求中执行脚本语法检查、整包校验、回归测试、语料扫描器自测和配方规划。

@@ -2,6 +2,28 @@
 
 本项目遵循语义化版本。发布版级差异记录在这里。
 
+## 3.1.0 - 2026-11-19
+
+### Added
+
+- 新增 `command-ui-playbook.md`：纯命令菜单/HUD 的输出通道、生命周期、状态冗余、取消退出、设备可达性、多人会话和性能验收。
+- 新增命令事实记录字段：`signature`、`aliases`、`scope`、`addedVersion`、`permissionLevel`、`requiresCheats`、`channelEvidence`、`sourceUrl` 和 `clientTest`。
+- 新增 BDS 控制台、Owner/服务器管理、Education、Editor、ModAPI 和 Java-only 的范围外门禁。
+- `validate-commands.mjs` 增加 `advancements=` 的 Java 参数拦截，并用正向 `name=`、负向 `predicate=`/`advancements=` 回归测试固定行为。
+- 测试矩阵新增纯命令 UI 的 10 项验收清单。
+
+### Changed
+
+- 审计 `xiaobo121388/mc-bedrock-commands-skill` 提交 `6836bfe7ae0fd34b2eb02bd210b201294f614e57`：仅借鉴元数据字段和负向检查，不导入停在 1.21.120、缺少逐条来源的命令百科。
+- 审计 `xiaobo121388/netease_mc-ui-skill` 提交 `5238ee29460792c55db73aaeba3a6a02f1869ba7`：只转写交互原则，不导入 JSON UI 模板、图片、Python API 或 Mojang/Microsoft 受限资产。
+- `op`/`deop`/`ops`/`permission` 等名字相近命令明确要求分别验证，不把相近命名自动当作别名。
+
+### Validation
+
+- 新命令事实、选择器和 UI 文档通过内部链接与命令行扫描。
+- `predicate=` 与 `advancements=` 负向回归通过，`name=` 正向回归通过。
+- 投影导出、命令链、配方、JSON/YAML、三目录哈希和 ZIP 完整性继续通过。
+
 ## 3.0.0 - 2026-11-19
 
 ### Added

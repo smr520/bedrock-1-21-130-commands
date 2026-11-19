@@ -2,7 +2,7 @@
 name: bedrock-1-21-130-commands
 description: 编写、现代化、排错和审计 Minecraft 网易中国版 3.10 / BE 1.21.130 的纯指令命令方块系统，并可导出带起止坐标的 .mcworld 或 BDS 世界目录；覆盖菜单、奖励、计时、多人配对、数据化 HUD、FMBE/MBE、状态机、旧语法转换、执行分叉预算和减少命令方块。
 metadata:
-  version: "3.0.0"
+  version: "3.1.0"
   author: "一个高质量的神秘人"
   github: "smr520"
   qq_group: "1031096520"
@@ -213,6 +213,7 @@ node (Join-Path $skillRoot "scripts\plan-recipes.mjs") player-hud shop-single-op
 | 减少方块、初始化、交易和显示压缩 | [block-budget.md](references/block-budget.md) |
 | 组合多个系统、共享显示、冷却和交易锁 | [shared-core.md](references/shared-core.md) |
 | 常用命令、Java 差异、文本与方块语法 | [commands.md](references/commands.md) |
+| 纯命令菜单、HUD、状态反馈、取消路径和多设备可读性 | [command-ui-playbook.md](references/command-ui-playbook.md) |
 | 选择器、记分板、冷却和状态机 | [selectors-and-scoreboard.md](references/selectors-and-scoreboard.md) |
 | 现有完整系统模板 | [systems.md](references/systems.md) |
 | 配方依赖、方块预算和多人能力登记 | [recipe-registry.json](references/recipe-registry.json) |

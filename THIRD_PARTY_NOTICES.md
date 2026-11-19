@@ -19,6 +19,15 @@ The original project contains material for NetEase China, command generation, BD
 
 The file `bedrock-1-21-130-commands/assets/world-template.level.dat` is a sanitized derivative of `scripts/_template.mcworld` from the project. The exporter replaces the world name, spawn, game settings, seed and timestamps; generated chunks and command blocks do not come from the upstream template. Its SHA-256 is recorded in `assets/WORLD_TEMPLATE.md`.
 
+## Reviewed command and UI references
+
+The following MIT repositories were audited for error patterns and high-level interaction principles:
+
+- `xiaobo121388/mc-bedrock-commands-skill` at `6836bfe7ae0fd34b2eb02bd210b201294f614e57`
+- `xiaobo121388/netease_mc-ui-skill` at `5238ee29460792c55db73aaeba3a6a02f1869ba7`
+
+No command encyclopedia text, JSON UI templates, images, fonts, Python/API implementation, or bundled vanilla UI files from these repositories are contained in this release. The UI repository's `templates/vanilla_ui` contains Mojang/Microsoft rights notices and is excluded regardless of its root MIT declaration.
+
 MIT License
 
 Copyright (c) 2026 yixin-amore

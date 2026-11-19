@@ -21,7 +21,7 @@ const COMMANDS = new Set([
   'scriptevent'
 ]);
 
-const JAVA_PARAMS = /\b(limit|sort|distance|nbt|team|predicate|advancement|bossbar|attribute|forceload|datapack|fillbiome)\s*=/i;
+const JAVA_PARAMS = /\b(limit|sort|distance|nbt|team|predicate|advancements?|bossbar|attribute|forceload|datapack|fillbiome)\s*=/i;
 const JAVA_COMMANDS = new Set([
   'data', 'team', 'predicate', 'bossbar', 'attribute', 'advancement',
   'forceload', 'datapack', 'fillbiome', 'item', 'function'
@@ -572,6 +572,7 @@ lines.forEach((raw, i) => {
       team: '用 tag',
       predicate: '基岩版不支持 predicate',
       advancement: '基岩版不支持 advancement',
+      advancements: '基岩版不支持 advancements',
       bossbar: '用 title/titleraw 或侧边栏',
       attribute: '基岩版不支持 attribute',
       forceload: '用 tickingarea',

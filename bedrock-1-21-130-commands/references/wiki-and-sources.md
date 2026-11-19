@@ -35,6 +35,8 @@
 | [Mojang/bedrock-samples](https://github.com/Mojang/bedrock-samples) | `official-sample` | `metadata/command_modules` 中的命令名和样例元数据 | `main` 是更新版本；必须查 Release、tag 或历史提交才能用于 1.21.130 |
 | [MC百科《基岩版入门指令解析教程》](https://www.mcmod.cn/post/3872.html) | `corpus-observed` | 网易渠道和 1.21.120 入门语料 | 作者明确标注未经允许禁止转载；只用作用户语料线索，不复制、不当通用基线 |
 | [yixin-amore/MinecraftBE-Command-Building-Skill](https://github.com/yixin-amore/MinecraftBE-Command-Building-Skill) | `community-skill` | 网易命令边界、命令建模、spec/linter、FMBE/MBE、数据化 RPG 和原始文本 UI 的设计线索 | MIT；只吸收经本项目重写和校验的方法。审计提交 `9184e4d36c4df62a8fc4e2be951bd9163dd8196a`；该次建筑栈不并入纯命令方块默认流程 |
+| [xiaobo121388/mc-bedrock-commands-skill](https://github.com/xiaobo121388/mc-bedrock-commands-skill) | `community-reference` | 命令别名、权限、加入版本和 BDS/Education/Editor/ModAPI 范围对照的字段设计 | MIT；目标资料停在 1.21.120，97 份 reference 无逐条来源 URL，且存在命令矛盾；审计提交 `6836bfe7ae0fd34b2eb02bd210b201294f614e57`，不复制其命令百科 |
+| [xiaobo121388/netease_mc-ui-skill](https://github.com/xiaobo121388/netease_mc-ui-skill) | `community-ui-reference` | 控件状态、菜单生命周期、取消路径、设备可达性和文字可读性原则 | 根声明 MIT，但 54 个以上模板带 Mojang/Microsoft 保留权利声明；审计提交 `5238ee29460792c55db73aaeba3a6a02f1869ba7`，不导入任何模板、图片或 Python API |
 
 该仓库 2026-11-18 的更新还加入了建筑编译器和一份 `command-syntax.json`。建筑编译器不进入本项目默认流程；命令表缺少可直接追溯的目标客户端证据，且该仓库自身仍把 `fog` 标为未实装，因此不能覆盖本项目的网易官方证据矩阵。
 
