@@ -21,7 +21,7 @@ QQ 交流群：**1031096520**
 - 条件链传播、成功次数、延迟 0/1、首刻执行、C-tick 与共享循环根语义。
 - 菜单、商店、撤离、HUD、欢迎、计时、冷却、交易锁和 BOSS 状态模板。
 - 1 格条件 T 显：用 `%%2` 原始文本参数槽按分数选择或省略提示文字，减少显示分支命令方块。
-- `.mcworld` / BDS 投影导出：自动摆放命令方块、按钮和朝向，文件名、世界名和 `projection.json` 同时记录起止坐标。
+- `.mcworld` / BDS 投影导出：文件固定命名为 `指令区@[起点x,起点y,起点z]~[终点x,终点y,终点z].mcworld`，BDS 目录和 sidecar 共享同一基名，`projection.json` 同时记录起止坐标。
 - 已有 `.mcworld` 只读审计：同时解析 LevelDB `.log` 与 `.ldb`，按 sequence、墓碑和世界选区恢复当前命令方块，再去重统计命令、物理方块、孤儿、空命令、条件和延迟。
 - 网易 `.building` 只读审计：解压 zlib JSON，从 URL 编码 SNBT 的 `blockNBT` / `blockCompleteNBT` 恢复命令方块、模式、坐标、延迟和命令。
 - 网易高级玩法路由：FMBE/MBE、数据化 RPG、T 显、武器触发、UID 和二进制坐标。
@@ -156,9 +156,9 @@ HUD 仲裁的 3 格只统计仲裁链本身。接入现有菜单、撤离或 HUD
 
 ## 验证状态
 
-`v3.5.0` 已通过 skill 结构、命令语法、链级结构、JSON 链 spec、rawtext 参数槽、纯命令 UI、`.mcworld` / BDS 导出、`.log + .ldb` 当前状态合并、墓碑、选区过滤、纯表世界审计、`.building` zlib JSON/SNBT 审计、命令方块提取、空方块与孤儿识别、配方预算和敏感信息审计。扩展语料在去重后得到 114 个可解析世界/BDX 和 6 个 `.building`，共 39,179 个当前命令方块、36,693 条非空命令和 27,640 条全局唯一命令；另有 25 个无效或空占位世界/BDX，以及 2 个未提供密码的加密 ZIP，未计入成功语料。发布环境未安装 Minecraft 客户端或实际 BDS，因此命令与投影仍标记为 `static-only` / `runtime-unverified`。
+`v3.5.1` 已通过 skill 结构、命令语法、链级结构、JSON 链 spec、rawtext 参数槽、纯命令 UI、`.mcworld` / BDS 导出、固定 `指令区@[起点x,起点y,起点z]~[终点x,终点y,终点z]` 基名、`.log + .ldb` 当前状态合并、墓碑、选区过滤、纯表世界审计、`.building` zlib JSON/SNBT 审计、命令方块提取、空方块与孤儿识别、配方预算和敏感信息审计。扩展语料在去重后得到 114 个可解析世界/BDX 和 6 个 `.building`，共 39,179 个当前命令方块、36,693 条非空命令和 27,640 条全局唯一命令；另有 25 个无效或空占位世界/BDX，以及 2 个未提供密码的加密 ZIP，未计入成功语料。发布环境未安装 Minecraft 客户端或实际 BDS，因此命令与投影仍标记为 `static-only` / `runtime-unverified`。
 
-本次匿名化语料审计见 [AUDIT-expanded-corpus-v3.5.md](https://github.com/smr520/bedrock-1-21-130-commands/releases/download/v3.5.0/AUDIT-expanded-corpus-v3.5.md)。v3.3 的原始日志统计已由当前状态结果取代。
+本次匿名化语料审计见 [AUDIT-expanded-corpus-v3.5.md](https://github.com/smr520/bedrock-1-21-130-commands/releases/download/v3.5.1/AUDIT-expanded-corpus-v3.5.md)。v3.3 的原始日志统计已由当前状态结果取代。
 
 详细结果见 [VALIDATION.md](VALIDATION.md)。
 

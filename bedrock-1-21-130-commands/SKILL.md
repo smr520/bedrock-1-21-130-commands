@@ -1,8 +1,8 @@
 ---
 name: bedrock-1-21-130-commands
-description: 编写、现代化、排错和审计 Minecraft 网易中国版 3.10 / BE 1.21.130 的纯指令命令方块系统，并可导出带起止坐标的 .mcworld 或 BDS 世界目录；覆盖菜单、奖励、计时、多人配对、数据化 HUD、FMBE/MBE、状态机、旧语法转换、执行分叉预算和减少命令方块。
+description: 编写、现代化、排错和审计 Minecraft 网易中国版 3.10 / BE 1.21.130 的纯指令命令方块系统，并固定以 指令区@[起点x,起点y,起点z]~[终点x,终点y,终点z] 基名导出 .mcworld、BDS 世界目录和 sidecar；覆盖菜单、奖励、计时、多人配对、数据化 HUD、FMBE/MBE、状态机、旧语法转换、执行分叉预算和减少命令方块。
 metadata:
-  version: "3.5.0"
+  version: "3.5.1"
   author: "一个高质量的神秘人"
   github: "smr520"
   qq_group: "1031096520"
@@ -79,7 +79,7 @@ metadata:
 4. **写命令**：动作型命令使用 1.19.50+ 的 `execute ... run`；只检测条件时允许以完整 `if/unless` 结尾。先改状态会破坏后续选择器时，先用 `tag` 固定对象。
 5. **核对预算**：统计每个命令方块和每次触发的执行分叉，不计聊天栏准备命令；说明删掉的装饰和保留的保护格。
 6. **静态检查**：运行命令、链级、NetEase 可用性、spec 和整包校验，修掉旧语法、Java 参数、坏 JSON、全角符号、`if score` 多目标比较和传送多目标目的地。
-7. **导出投影**：用户需要 `.mcworld`、BDS 或精确命令区坐标时，读取 [projection-export.md](references/projection-export.md)，从同一份 spec 生成世界文件；文件名和 `projection.json` 必须同时记录起止坐标。
+7. **导出投影**：用户需要 `.mcworld`、BDS 或精确命令区坐标时，读取 [projection-export.md](references/projection-export.md)，从同一份 spec 生成世界文件；`.mcworld`、BDS 目录和 sidecar 统一使用 `指令区@[起点x,起点y,起点z]~[终点x,终点y,终点z]` 作为基名，`projection.json` 同时记录起止坐标。
 8. **列实机测试**：覆盖成功、失败、边界、重复触发、多人、离开加载区、重进和清理路径。静态通过后仍标为 `static-only`。
 
 用户提供已有 `.mcworld` 作为训练语料或要求审计已有地图时，先用
@@ -103,7 +103,7 @@ metadata:
 5. 正常路径、失败路径、多人路径和加载/重进测试。
 6. 执行分叉预算：来源数、目标数、触发频率和最大实例数。
 7. 纯指令做不到的状态，或为了减少方块而接受的可见差异。
-8. 投影交付时给出 `.mcworld`、BDS 目录、起点、终点、尺寸、世界名和导入路径。
+8. 投影交付时给出 `指令区@[起点x,起点y,起点z]~[终点x,终点y,终点z].mcworld`、对应的 BDS 目录、起点、终点、尺寸、世界名和导入路径。
 
 方块标注统一使用：
 

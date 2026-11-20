@@ -1,6 +1,6 @@
 # Validation
 
-验证日期：2026-11-19。
+验证日期：2026-11-20。
 
 ## 环境
 
@@ -24,7 +24,7 @@
 | skill-creator `quick_validate.py` | 通过；frontmatter、名称和未完成脚手架检查 |
 | `node scripts/validate-skill.mjs` | 通过；25 份运行时文档、30 份 Markdown 内部链接、入口路由、网易与 Wiki 关键来源、命令语法、Java 选择器参数、rawtext 参数槽、纯命令 UI、链结构、JSON schema、世界模板、链 spec、配方注册表和 CB 声明一致 |
 | `node scripts/selftest.mjs` | 通过；校验器正向、负向、严格模式、动作型与纯条件型 `execute`、`name=` 正向、`predicate=`/`advancements=` 负向、网易未验证警告、rawtext 参数槽、投影配置、链 spec、单目标分数比较、传送目的地和配方复用 |
-| `python scripts/export-projection.py --self-test` | 通过；从三格蛇形链生成 `.mcworld` 和 BDS 目录，检查世界容器、关键 LevelDB 文件、命令方块 NBT、起止坐标及 BDS/archive 逐字节一致性 |
+| `python scripts/export-projection.py --self-test` | 通过；从三格蛇形链生成 `.mcworld` 和 BDS 目录，检查固定 `指令区@[起点x,起点y,起点z]~[终点x,终点y,终点z]` 基名、4 个 sidecar、`projection.json.archiveName`、世界容器、关键 LevelDB 文件、命令方块 NBT、起止坐标及 BDS/archive 逐字节一致性 |
 | `python scripts/audit-mcworld.py --self-test` | 通过；合成日志世界和纯 `.ldb` 世界，检查世界元数据、sequence、墓碑、选区外实体、表块解压、命令方块 NBT、实体/类型拆分、重复统计和 ZIP 路径安全 |
 | `python scripts/audit-building.py --self-test` | 通过；合成 zlib JSON `.building`，检查 URL 编码 SNBT、阶段模式、命令、延迟、自动模式和空/非空统计 |
 | `node scripts/validate-chain-spec.mjs` | 通过；同分互传 spec 无错误，可生成 Markdown 构建表 |
@@ -37,12 +37,12 @@
 | 敏感信息扫描 | 未发现密钥、令牌、邮箱、手机号、个人绝对路径或口令 |
 | 二进制文件检查 | skill 目录 48 个文件中，47 个 UTF-8 文本通过；唯一二进制是已清洗、固定哈希的 2,828-byte `world-template.level.dat` |
 | 安装目录哈希比对 | 通过；源目录、发布目录和已安装 skill 的 48 个文件逐文件 SHA-256 一致 |
-| ZIP 完整性 | 通过；`v3.5.0` ZIP 共 48 个文件、192,907 bytes，逐文件 SHA-256 与发布目录一致，没有越界路径 |
+| ZIP 完整性 | 通过；`v3.5.1` ZIP 共 48 个文件、193,181 bytes，逐文件 SHA-256 与发布目录一致，没有越界路径 |
 
 ZIP SHA-256：
 
 ```text
-16d2c23cc7a71ad41e8fa7b5f2a25c7005d8f511e03d383e402f372b29fd25a3
+c3fca939a69db046cf925efaa90cf6fb5c9c2d52860e6ee7c42cd63ada82f96f
 ```
 
 GitHub Actions 在每次推送到 `main` 和每个拉取请求中执行脚本语法检查、整包校验、回归测试、语料扫描器自测、已有世界审计自测和配方规划。

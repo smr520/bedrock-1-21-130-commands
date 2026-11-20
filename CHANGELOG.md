@@ -2,6 +2,18 @@
 
 本项目遵循语义化版本。发布版级差异记录在这里。
 
+## 3.5.1 - 2026-11-20
+
+### Changed
+
+- `.mcworld`、BDS 目录和所有投影 sidecar 统一使用 `指令区@[起点x,起点y,起点z]~[终点x,终点y,终点z]` 作为基名。
+- 投影自测新增精确文件名、BDS 目录名、sidecar 基名和 `projection.json.archiveName` 一致性断言，防止命名格式回退。
+
+### Validation
+
+- 运行 skill 结构、命令、链、JSON spec、投影导出、语料扫描和 Python 自测。
+- 输出仍为纯命令方块投影；发布环境没有网易客户端或实际 BDS，时态结论保持 `static-only` / `runtime-unverified`。
+
 ## 3.5.0 - 2026-11-19
 
 ### Added

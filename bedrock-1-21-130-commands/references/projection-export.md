@@ -14,8 +14,10 @@ BDS 指 Bedrock Dedicated Server 的世界目录，不是第三方编辑器常�
 文件名使用：
 
 ```text
-<spec-name>__start_<x>_<y>_<z>__end_<x>_<y>_<z>.mcworld
+指令区@[<起点x>,<起点y>,<起点z>]~[<终点x>,<终点y>,<终点z>].mcworld
 ```
+
+实际示例：命令方块包围盒从 `1000000,-61,1000000` 到 `1000063,-50,1000063` 时，文件固定生成 `指令区@[1000000,-61,1000000]~[1000063,-50,1000063].mcworld`。
 
 同名 BDS 目录位于 `bds/` 下。起止坐标指命令方块区域的最小角和最大角，轴约定为 X 向东、Y 向上、Z 向南。按钮会让 `visualStart`/`visualEnd` 比命令区多一格，两个范围都写入 `projection.json`。
 
@@ -28,12 +30,12 @@ python -B -X utf8 scripts\export-projection.py examples\same-score-pair-teleport
 默认生成：
 
 ```text
-*.mcworld
-bds/<coordinates>/
-*.projection.json
-*.commands.txt
-*.placement.txt
-*.SHA256SUMS.txt
+指令区@[<起点x>,<起点y>,<起点z>]~[<终点x>,<终点y>,<终点z>].mcworld
+bds/指令区@[<起点x>,<起点y>,<起点z>]~[<终点x>,<终点y>,<终点z>]/
+指令区@[<起点x>,<起点y>,<起点z>]~[<终点x>,<终点y>,<终点z>].projection.json
+指令区@[<起点x>,<起点y>,<起点z>]~[<终点x>,<终点y>,<终点z>].commands.txt
+指令区@[<起点x>,<起点y>,<起点z>]~[<终点x>,<终点y>,<终点z>].placement.txt
+指令区@[<起点x>,<起点y>,<起点z>]~[<终点x>,<终点y>,<终点z>].SHA256SUMS.txt
 ```
 
 覆盖输出使用 `--force`。世界元数据模板是 [world-template.level.dat](../assets/world-template.level.dat)，其来源和哈希见 [WORLD_TEMPLATE.md](../assets/WORLD_TEMPLATE.md)。
@@ -88,7 +90,7 @@ CLI 的 `--origin`、`--axis`、`--layout`、`--width`、`--spawn`、`--world-na
 ## 导入
 
 1. 客户端：导入同名 `.mcworld`。
-2. BDS：停止服务器，把 `bds/<coordinates>/` 复制到 `worlds/<server-world-name>/`，再在服务器配置中引用该世界名并启动。
+2. BDS：停止服务器，把 `bds/指令区@[<起点x>,<起点y>,<起点z>]~[<终点x>,<终点y>,<终点z>]/` 复制到 `worlds/<server-world-name>/`，再在服务器配置中引用该世界名并启动。
 3. 核对 `projection.json` 的 `start`、`end`、`size`；不要用按钮或视觉边界的坐标代替命令区坐标。
 4. 在目标网易客户端和实际 BDS 版本上测试命令方块加载、按钮、链条朝向和区块常加载。
 
@@ -99,6 +101,7 @@ CLI 的 `--origin`、`--axis`、`--layout`、`--width`、`--spawn`、`--world-na
 - chain spec 通过现有命令和链校验。
 - `.mcworld` 是 ZIP 根世界容器。
 - `level.dat`、`db/CURRENT`、`db/MANIFEST-000000` 和 LevelDB 日志存在。
+- `.mcworld`、BDS 目录、4 个 sidecar 和 `projection.json.archiveName` 使用同一个 `指令区@[起点x,起点y,起点z]~[终点x,终点y,终点z]` 基名。
 - 命令方块 NBT 数量与 spec 一致。
 - BDS 目录中的每个文件与 `.mcworld` 内文件逐字节一致。
 

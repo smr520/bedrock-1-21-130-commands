@@ -9,12 +9,12 @@ python -B -X utf8 scripts\export-projection.py examples\same-score-pair-teleport
 预期生成：
 
 ```text
-same-score-pair-teleport__start_0_4_0__end_0_4_0.mcworld
-bds/same-score-pair-teleport__start_0_4_0__end_0_4_0/
-same-score-pair-teleport__start_0_4_0__end_0_4_0.projection.json
-same-score-pair-teleport__start_0_4_0__end_0_4_0.commands.txt
-same-score-pair-teleport__start_0_4_0__end_0_4_0.placement.txt
-same-score-pair-teleport__start_0_4_0__end_0_4_0.SHA256SUMS.txt
+指令区@[0,4,0]~[0,4,0].mcworld
+bds/指令区@[0,4,0]~[0,4,0]/
+指令区@[0,4,0]~[0,4,0].projection.json
+指令区@[0,4,0]~[0,4,0].commands.txt
+指令区@[0,4,0]~[0,4,0].placement.txt
+指令区@[0,4,0]~[0,4,0].SHA256SUMS.txt
 ```
 
 命令方块位于 `0 4 0`，起止坐标都是 `0 4 0`；石按钮位于 `0 5 0`，因此视觉范围终点是 `0 5 0`。世界出生点由 spec 写为 `2 6 0`。

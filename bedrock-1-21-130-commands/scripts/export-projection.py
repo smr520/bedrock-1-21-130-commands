@@ -25,6 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SPEC_VALIDATOR = ROOT / "scripts" / "validate-chain-spec.mjs"
 DEFAULT_TEMPLATE = ROOT / "assets" / "world-template.level.dat"
+PROJECTION_NAME_PREFIX = "指令区"
 
 TAG_BYTE = 1
 TAG_SHORT = 2
@@ -700,6 +701,15 @@ def bounds(points: list[tuple[int, int, int]]) -> tuple[tuple[int, int, int], tu
     return start, end, size
 
 
+def projection_archive_name(
+    start: tuple[int, int, int], end: tuple[int, int, int]
+) -> str:
+    return (
+        f"{PROJECTION_NAME_PREFIX}@[{','.join(map(str, start))}]"
+        f"~[{','.join(map(str, end))}]"
+    )
+
+
 def build_world_files(
     spec: dict,
     blocks: list[dict],
@@ -712,10 +722,7 @@ def build_world_files(
     command_start, command_end, command_size = bounds([block["pos"] for block in blocks])
     visual_points = [block["pos"] for block in blocks] + buttons
     visual_start, visual_end, visual_size = bounds(visual_points)
-    coordinate_suffix = (
-        f"start_{'_'.join(map(str, command_start))}__end_{'_'.join(map(str, command_end))}"
-    )
-    archive_name = f"{spec['name']}__{coordinate_suffix}"
+    archive_name = projection_archive_name(command_start, command_end)
     level_name = (
         f"{world_name} | start {command_start[0]} {command_start[1]} {command_start[2]} "
         f"| end {command_end[0]} {command_end[1]} {command_end[2]}"
@@ -986,6 +993,11 @@ def export_projection(spec_path: Path, outdir: Path, args) -> dict:
 
 def self_test() -> int:
     with tempfile.TemporaryDirectory(prefix="bedrock-export-") as temporary:
+        sample_name = projection_archive_name(
+            (1000000, -61, 1000000), (1000063, -50, 1000063)
+        )
+        if sample_name != "指令区@[1000000,-61,1000000]~[1000063,-50,1000063]":
+            raise ExportError("self-test projection name does not match the required example")
         root = Path(temporary)
         spec_path = root / "spec.json"
         spec = {
@@ -1041,8 +1053,24 @@ def self_test() -> int:
         result = export_projection(spec_path, root / "out", args)
         archive_path = Path(result["outputs"]["mcworld"])
         bds_path = Path(result["outputs"]["bds"])
-        if "__start_0_4_0__end_1_4_1.mcworld" not in archive_path.name:
-            raise ExportError("self-test archive filename is missing bounds")
+        expected_stem = "指令区@[0,4,0]~[1,4,1]"
+        if archive_path.name != f"{expected_stem}.mcworld":
+            raise ExportError("self-test archive filename does not match the required coordinate format")
+        if bds_path.name != expected_stem:
+            raise ExportError("self-test BDS folder name does not match the archive stem")
+        sidecar_names = {
+            Path(result["outputs"]["manifest"]).name,
+            Path(result["outputs"]["commands"]).name,
+            Path(result["outputs"]["placement"]).name,
+            Path(result["outputs"]["checksums"]).name,
+        }
+        if sidecar_names != {
+            f"{expected_stem}.projection.json",
+            f"{expected_stem}.commands.txt",
+            f"{expected_stem}.placement.txt",
+            f"{expected_stem}.SHA256SUMS.txt",
+        }:
+            raise ExportError("self-test sidecar names do not share the required archive stem")
         with zipfile.ZipFile(archive_path) as archive:
             names = set(archive.namelist())
             required = {
@@ -1056,6 +1084,8 @@ def self_test() -> int:
             if not required.issubset(names):
                 raise ExportError("self-test archive is missing required files")
             manifest = json.loads(archive.read("projection.json"))
+            if manifest["archiveName"] != expected_stem:
+                raise ExportError("self-test manifest archiveName does not match the required stem")
             level_name = archive.read("levelname.txt").decode("utf-8")
             if "start 0 4 0" not in level_name or "end 1 4 1" not in level_name:
                 raise ExportError("self-test level name is missing bounds")
